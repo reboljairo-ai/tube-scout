@@ -1,4 +1,4 @@
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'https://tube-scout-production.up.railway.app';
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.local.set({
