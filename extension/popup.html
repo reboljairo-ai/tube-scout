@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>TubeScout</title>
+  <style>
+    :root {
+      --bg: #111111;
+      --card: #1C1C1C;
+      --border: #2A2A2A;
+      --accent: #00C896;
+      --accent-hover: #00A87E;
+      --red: #FF5555;
+      --green: #00C896;
+      --yellow: #F5A623;
+      --text: #E8E8E8;
+      --muted: #7A7A7A;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 420px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+    }
+
+    /* Header */
+    .header {
+      background: #161616;
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--accent); display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-mark svg { width: 16px; height: 16px; stroke: #111; fill: none; stroke-width: 2.5; }
+    .logo-text { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .logo-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .plan-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
+    .badge-free { background: #222; color: var(--muted); border: 1px solid var(--border); }
+    .badge-pro { background: rgba(0,200,150,0.12); color: var(--accent); border: 1px solid rgba(0,200,150,0.25); }
+
+    /* Tabs */
+    .tabs { display: flex; background: #161616; border-bottom: 1px solid var(--border); }
+    .tab {
+      flex: 1; padding: 9px 4px; text-align: center; cursor: pointer;
+      font-size: 10px; font-weight: 600; color: var(--muted); border: none; background: none;
+      transition: all 0.15s; display: flex; flex-direction: column;
+      align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .tab svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* Panels */
+    .panel { display: none; padding: 14px 16px; max-height: 460px; overflow-y: auto; }
+    .panel.active { display: block; }
+    .panel::-webkit-scrollbar { width: 3px; }
+    .panel::-webkit-scrollbar-track { background: transparent; }
+    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    /* Search */
+    .search-wrap { display: flex; gap: 8px; margin-bottom: 8px; }
+    .search-input {
+      flex: 1; padding: 9px 12px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 13px;
+      outline: none; transition: border 0.15s;
+    }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--muted); }
+    .btn-search {
+      padding: 9px 16px; background: var(--accent);
+      border: none; border-radius: 6px; color: #111;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-search:hover { background: var(--accent-hover); }
+    .btn-search:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* History */
+    .history-chips { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; min-height: 0; }
+    .history-chip {
+      padding: 3px 9px; border-radius: 4px; font-size: 11px;
+      background: var(--card); border: 1px solid var(--border); color: var(--muted);
+      cursor: pointer; transition: all 0.15s;
+      max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .history-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Score card */
+    .score-card {
+      background: var(--card); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 16px;
+      border-left: 3px solid var(--muted);
+    }
+    .score-card.high { border-left-color: var(--green); }
+    .score-card.medium { border-left-color: var(--yellow); }
+    .score-card.low { border-left-color: var(--red); }
+    .score-num { font-size: 40px; font-weight: 800; min-width: 56px; text-align: center; line-height: 1; }
+    .score-card.high .score-num { color: var(--green); }
+    .score-card.medium .score-num { color: var(--yellow); }
+    .score-card.low .score-num { color: var(--red); }
+    .score-info { flex: 1; min-width: 0; }
+    .score-bar-track { background: var(--border); border-radius: 2px; height: 3px; margin-bottom: 7px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 2px; }
+    .score-info h3 { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+    .score-info p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px; text-align: center;
+    }
+    .stat-value { font-size: 15px; font-weight: 700; color: var(--text); }
+    .stat-label { font-size: 10px; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Section title */
+    .section-title {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;
+    }
+
+    /* Video items */
+    .video-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px; margin-bottom: 5px;
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .video-item:hover { border-color: #3A3A3A; }
+    .video-rank { font-size: 11px; font-weight: 700; color: var(--muted); min-width: 18px; padding-top: 2px; }
+    .video-info { flex: 1; min-width: 0; }
+    .video-title {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      line-height: 1.4; margin-bottom: 5px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .video-meta { display: flex; gap: 5px; flex-wrap: wrap; }
+    .meta-tag {
+      font-size: 10px; padding: 2px 6px; border-radius: 3px;
+      background: rgba(255,255,255,0.04); color: var(--muted);
+    }
+    .meta-tag.hot { background: rgba(255,85,85,0.1); color: var(--red); }
+    .score-pill {
+      font-size: 11px; font-weight: 700; padding: 3px 8px;
+      border-radius: 4px; white-space: nowrap; align-self: center; flex-shrink: 0;
+    }
+
+    /* Keyword items */
+    .keyword-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; padding: 10px 12px; margin-bottom: 5px;
+      display: flex; gap: 10px; align-items: center; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .keyword-item:hover { border-color: var(--accent); }
+    .kw-info { flex: 1; min-width: 0; }
+    .kw-text { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .kw-score { font-size: 14px; font-weight: 800; min-width: 28px; text-align: center; }
+    .kw-bar-wrap { background: var(--border); border-radius: 2px; height: 3px; margin-top: 6px; overflow: hidden; }
+    .kw-bar { height: 100%; border-radius: 2px; transition: width 0.4s; }
+
+    /* States */
+    .empty-state { text-align: center; padding: 28px 16px; color: var(--muted); }
+    .empty-state p { font-size: 12px; line-height: 1.7; }
+    .loading { text-align: center; padding: 24px; color: var(--muted); font-size: 12px; }
+    .spinner {
+      width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      animation: spin 0.7s linear infinite; margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Filters */
+    .filter-row { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+    .filter-chip {
+      padding: 5px 11px; border-radius: 4px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--border); background: var(--card); color: var(--muted);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .filter-chip.active, .filter-chip:hover {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(0,200,150,0.08);
+    }
+
+    /* Channel */
+    .channel-header {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; margin-bottom: 12px;
+      display: flex; gap: 12px; align-items: center;
+    }
+    .channel-avatar {
+      width: 44px; height: 44px; border-radius: 8px;
+      background: rgba(0,200,150,0.1); border: 1px solid rgba(0,200,150,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: var(--accent); flex-shrink: 0;
+    }
+    .channel-name { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .channel-subs { font-size: 11px; color: var(--muted); }
+
+    /* Account */
+    .plan-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px; margin-bottom: 12px;
+    }
+    .plan-box-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .plan-name-big { font-size: 14px; font-weight: 700; }
+    .usage-bar-wrap { background: var(--border); border-radius: 2px; height: 3px; overflow: hidden; }
+    .usage-bar { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+    .input-field {
+      width: 100%; padding: 9px 12px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: 13px;
+      outline: none; transition: border 0.15s; margin-bottom: 8px;
+    }
+    .input-field:focus { border-color: var(--accent); }
+    .btn {
+      width: 100%; padding: 10px; border-radius: 6px; border: none;
+      font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+      margin-bottom: 8px;
+    }
+    .btn-primary { background: var(--accent); color: #111; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+    .btn-outline:hover { background: rgba(0,200,150,0.08); }
+    .btn-danger { background: transparent; border: 1px solid var(--red); color: var(--red); }
+    .btn-danger:hover { background: rgba(255,85,85,0.08); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .msg { font-size: 12px; padding: 8px 10px; border-radius: 5px; text-align: center; margin-bottom: 8px; }
+    .msg-success { background: rgba(0,200,150,0.08); color: var(--green); border: 1px solid rgba(0,200,150,0.2); }
+    .msg-error { background: rgba(255,85,85,0.08); color: var(--red); border: 1px solid rgba(255,85,85,0.2); }
+
+    .upgrade-banner {
+      background: rgba(0,200,150,0.05);
+      border: 1px solid rgba(0,200,150,0.12);
+      border-radius: 8px; padding: 14px; text-align: center; margin-top: 12px;
+    }
+    .upgrade-banner h3 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .upgrade-banner p { font-size: 11px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+
+    /* Lock banner */
+    .lock-banner {
+      background: rgba(0,200,150,0.04);
+      border: 1px dashed rgba(0,200,150,0.2);
+      border-radius: 6px; padding: 12px; text-align: center; margin-top: 6px;
+    }
+    .lock-banner p { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .lock-banner strong { color: var(--accent); }
+    .btn-lock-upgrade {
+      background: var(--accent); color: #111; border: none;
+      padding: 7px 16px; border-radius: 5px; font-size: 11px;
+      font-weight: 700; cursor: pointer;
+    }
+
+    /* Email modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(8,8,8,0.97);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 20px;
+    }
+    .email-modal {
+      background: #1A1A1A; border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px; width: 100%; text-align: center;
+    }
+    .modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; line-height: 1.6; }
+    .modal-input {
+      width: 100%; padding: 10px 12px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 13px; outline: none;
+      margin-bottom: 10px; transition: border 0.15s;
+    }
+    .modal-input:focus { border-color: var(--accent); }
+    .modal-input::placeholder { color: var(--muted); }
+    .btn-modal-primary {
+      width: 100%; padding: 10px; background: var(--accent); color: #111;
+      border: none; border-radius: 6px; font-size: 13px; font-weight: 700;
+      cursor: pointer; margin-bottom: 8px;
+    }
+    .btn-modal-primary:hover { background: var(--accent-hover); }
+    .btn-modal-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-modal-skip {
+      background: none; border: none; color: var(--muted);
+      font-size: 11px; cursor: pointer; text-decoration: underline;
+    }
+    .modal-msg { font-size: 12px; padding: 7px; border-radius: 5px; margin-bottom: 8px; }
+    .modal-msg.error { background: rgba(255,85,85,0.08); color: var(--red); }
+    .modal-msg.success { background: rgba(0,200,150,0.08); color: var(--green); }
+
+    /* Footer */
+    .footer {
+      padding: 8px 16px; border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; background: #161616;
+    }
+    .footer a { font-size: 10px; color: var(--muted); text-decoration: none; }
+    .footer a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">TubeScout</div>
+        <div class="logo-sub">YouTube Market Research</div>
+      </div>
+    </div>
+    <span class="plan-badge badge-free" id="plan-badge">Free</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="niche">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+      Nicho
+    </button>
+    <button class="tab" data-tab="trending">
+      <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Viral
+    </button>
+    <button class="tab" data-tab="channel">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Canal
+    </button>
+    <button class="tab" data-tab="keywords">
+      <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      Keywords
+    </button>
+    <button class="tab" data-tab="account">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Cuenta
+    </button>
+  </div>
+
+  <!-- NICHE TAB -->
+  <div class="panel active" id="panel-niche">
+    <div class="search-wrap">
+      <input type="text" id="niche-input" class="search-input" placeholder="ej: minecraft tutorials, keto diet...">
+      <button id="niche-btn" class="btn-search">Analizar</button>
+    </div>
+    <div class="history-chips" id="niche-history"></div>
+    <div id="niche-results">
+      <div class="empty-state">
+        <p>Ingresa un nicho o keyword para ver<br>el análisis de oportunidad y los videos<br>que más tráfico generan.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRENDING TAB -->
+  <div class="panel" id="panel-trending">
+    <div class="filter-row">
+      <button class="filter-chip active" data-cat="0">Todo</button>
+      <button class="filter-chip" data-cat="28">Tech</button>
+      <button class="filter-chip" data-cat="20">Gaming</button>
+      <button class="filter-chip" data-cat="27">Educación</button>
+      <button class="filter-chip" data-cat="24">Entertainment</button>
+      <button class="filter-chip" data-cat="26">How-to</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-chip active" data-region="US">US</button>
+      <button class="filter-chip" data-region="ES">ES</button>
+      <button class="filter-chip" data-region="MX">MX</button>
+      <button class="filter-chip" data-region="AR">AR</button>
+      <button class="filter-chip" data-region="BR">BR</button>
+    </div>
+    <div id="trending-results">
+      <div class="loading"><div class="spinner"></div>Cargando tendencias…</div>
+    </div>
+  </div>
+
+  <!-- CHANNEL TAB -->
+  <div class="panel" id="panel-channel">
+    <div class="search-wrap">
+      <input type="text" id="channel-input" class="search-input" placeholder="Nombre del canal o URL...">
+      <button id="channel-btn" class="btn-search">Analizar</button>
+    </div>
+    <div id="channel-results">
+      <div class="empty-state">
+        <p>Ingresa el nombre o URL de un canal<br>para ver su análisis completo.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYWORDS TAB -->
+  <div class="panel" id="panel-keywords">
+    <div class="search-wrap">
+      <input type="text" id="kw-input" class="search-input" placeholder="ej: fitness, cocina vegana, finanzas...">
+      <button id="kw-btn" class="btn-search">Buscar</button>
+    </div>
+    <div class="history-chips" id="kw-history"></div>
+    <div id="kw-results">
+      <div class="empty-state">
+        <p>Ingresa un tema y te mostramos las<br>keywords más buscadas en YouTube<br>con su nivel de competencia y score.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT TAB -->
+  <div class="panel" id="panel-account">
+    <div class="plan-box">
+      <div class="plan-box-row">
+        <div>
+          <div class="plan-name-big" id="plan-name">Free</div>
+          <div id="usage-text" style="font-size:11px;color:var(--muted);margin-top:4px">0 de 20 análisis usados hoy</div>
+        </div>
+        <span class="plan-badge badge-free" id="plan-badge2">Free</span>
+      </div>
+      <div class="usage-bar-wrap">
+        <div class="usage-bar" id="usage-bar" style="width:0%;background:var(--accent)"></div>
+      </div>
+    </div>
+
+    <div id="license-section">
+      <div class="section-title" style="margin-bottom:8px">Activar Licencia Pro</div>
+      <input type="text" id="license-input" class="input-field" placeholder="XXXX-XXXX-XXXX-XXXX">
+      <div id="activation-msg" style="display:none"></div>
+      <button id="activate-btn" class="btn btn-primary">Activar</button>
+    </div>
+
+    <div id="pro-active" style="display:none">
+      <div class="msg msg-success">Plan Pro activo — análisis ilimitados</div>
+      <button id="deactivate-btn" class="btn btn-danger">Desactivar licencia</button>
+    </div>
+
+    <div id="upgrade-section" class="upgrade-banner">
+      <h3>Actualiza a Pro</h3>
+      <p>Análisis ilimitados, exportación CSV y acceso a tendencias avanzadas por nicho.</p>
+      <button class="btn btn-primary" id="upgrade-btn" style="margin-bottom:0">Ver planes</button>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="#" id="footer-home">tubescout.io</a>
+    <a href="#" id="footer-help">Ayuda</a>
+  </div>
+
+  <!-- EMAIL MODAL -->
+  <div class="modal-overlay" id="modal-overlay" style="display:none">
+    <div class="email-modal">
+      <div class="modal-title">Desbloquea 10 búsquedas/día gratis</div>
+      <div class="modal-sub">Ingresá tu email para continuar.<br>Con Pro obtenés acceso ilimitado a todo.</div>
+
+      <div id="step-email">
+        <div id="modal-msg-email" class="modal-msg" style="display:none"></div>
+        <input type="email" id="modal-email" class="modal-input" placeholder="tu@email.com">
+        <button id="send-code-btn" class="btn-modal-primary">Enviar código</button>
+        <button class="btn-modal-skip" id="skip-modal">Ver planes Pro</button>
+      </div>
+
+      <div id="step-code" style="display:none">
+        <div class="modal-sub" style="margin-bottom:12px">Revisá tu email y pegá el código de 6 dígitos</div>
+        <div id="modal-msg-code" class="modal-msg" style="display:none"></div>
+        <input type="text" id="modal-code" class="modal-input" placeholder="123456" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:6px">
+        <button id="verify-code-btn" class="btn-modal-primary">Verificar código</button>
+        <button class="btn-modal-skip" id="back-to-email">Cambiar email</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

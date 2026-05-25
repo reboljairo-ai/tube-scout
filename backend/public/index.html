@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TubeScout — YouTube Niche Research Tool</title>
+  <meta name="description" content="Find viral YouTube niches, analyze competitors, and discover content opportunities before anyone else. Free Chrome extension.">
+  <meta property="og:title" content="TubeScout — YouTube Niche Research Tool">
+  <meta property="og:description" content="Analyze YouTube niches, viral patterns, and competitors in seconds. Built for content creators and marketers.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root {
+      --accent: #6C63FF;
+      --accent-dark: #5A52D5;
+      --bg-dark: #0F1117;
+      --card-dark: #1A1D2E;
+      --border-dark: #2D3148;
+      --text-dark: #E2E8F0;
+      --muted: #94A3B8;
+      --green: #4ADE80;
+      --yellow: #FBBF24;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a2e; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,17,23,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dark);
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .nav-logo-icon { font-size: 22px; }
+    .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text-dark); }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-link { font-size: 14px; color: var(--muted); text-decoration: none; }
+    .nav-link:hover { color: var(--text-dark); }
+    .btn-nav {
+      padding: 8px 18px; background: var(--accent); color: white;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: background 0.15s;
+    }
+    .btn-nav:hover { background: var(--accent-dark); }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(160deg, #0F1117 0%, #1a1240 60%, #0F1117 100%);
+      padding: 90px 24px 80px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3);
+      color: #a5b4fc; padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; font-weight: 600; margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800; color: var(--text-dark);
+      line-height: 1.15; margin-bottom: 20px;
+      max-width: 800px; margin-left: auto; margin-right: auto;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 18px; color: var(--muted);
+      max-width: 560px; margin: 0 auto 36px; line-height: 1.7;
+    }
+    .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      padding: 14px 28px; background: var(--accent); color: white;
+      border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
+      cursor: pointer; text-decoration: none; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.3); }
+    .btn-secondary {
+      padding: 14px 28px; background: transparent; color: var(--text-dark);
+      border: 1px solid var(--border-dark); border-radius: 10px;
+      font-size: 15px; font-weight: 600; text-decoration: none;
+      transition: all 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .hero-note { font-size: 12px; color: var(--muted); margin-top: 16px; }
+
+    /* ── Trust strip ── */
+    .trust-strip {
+      background: var(--card-dark);
+      border-top: 1px solid var(--border-dark);
+      border-bottom: 1px solid var(--border-dark);
+      padding: 20px 24px;
+      display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+    }
+    .trust-item { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .trust-item .ti-icon { font-size: 18px; }
+
+    /* ── Sections ── */
+    .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 13px; font-weight: 700; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
+    }
+    .section-title { font-size: clamp(26px, 3vw, 38px); font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
+    .section-sub { font-size: 16px; color: #64748b; line-height: 1.7; max-width: 560px; }
+
+    /* ── Features ── */
+    .features-bg { background: #f8faff; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px; margin-top: 48px;
+    }
+    .feature-card {
+      background: white; border: 1px solid #e2e8f0;
+      border-radius: 16px; padding: 28px;
+      transition: box-shadow 0.2s;
+    }
+    .feature-card:hover { box-shadow: 0 8px 32px rgba(108,99,255,0.1); border-color: #c7d2fe; }
+    .feature-icon { font-size: 32px; margin-bottom: 16px; }
+    .feature-title { font-size: 17px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+    .feature-desc { font-size: 14px; color: #64748b; line-height: 1.7; }
+
+    /* ── How it works ── */
+    .steps { display: flex; gap: 24px; margin-top: 48px; flex-wrap: wrap; }
+    .step { flex: 1; min-width: 220px; }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; margin-bottom: 14px;
+    }
+    .step-title { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+    .step-desc { font-size: 14px; color: #64748b; line-height: 1.6; }
+    .step-connector { display: flex; align-items: flex-start; padding-top: 18px; color: #cbd5e1; font-size: 20px; }
+
+    /* ── Extension preview ── */
+    .preview-bg { background: var(--bg-dark); }
+    .preview-wrap {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 48px; align-items: center; margin-top: 48px;
+    }
+    .preview-text .section-title { color: var(--text-dark); }
+    .preview-text .section-sub { color: var(--muted); }
+    .preview-points { list-style: none; margin-top: 24px; display: flex; flex-direction: column; gap: 14px; }
+    .preview-points li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--muted); }
+    .preview-points li .pp-icon { font-size: 18px; margin-top: -1px; }
+    .preview-points li strong { color: var(--text-dark); display: block; font-size: 14px; margin-bottom: 2px; }
+    .preview-mockup {
+      background: var(--card-dark);
+      border: 1px solid var(--border-dark);
+      border-radius: 20px;
+      padding: 20px;
+      font-family: -apple-system, sans-serif;
+    }
+    .mock-header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(135deg, #1E1B4B, #1A1D2E);
+      border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;
+    }
+    .mock-logo { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+    .mock-badge { background: var(--accent); color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 700; }
+    .mock-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+    .mock-tab {
+      flex: 1; text-align: center; padding: 7px 4px;
+      background: transparent; border-radius: 8px;
+      font-size: 11px; color: var(--muted);
+    }
+    .mock-tab.active { background: rgba(108,99,255,0.15); color: var(--accent); }
+    .mock-search {
+      background: #0F1117; border: 1px solid var(--border-dark);
+      border-radius: 8px; padding: 9px 12px; font-size: 12px;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .mock-score-card {
+      background: #0F1117; border: 1px solid var(--border-dark);
+      border-radius: 10px; padding: 12px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .mock-ring {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(74,222,128,0.15); border: 2px solid var(--green);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: var(--green);
+    }
+    .mock-ring-label { font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+    .mock-ring-sub { font-size: 10px; color: var(--muted); }
+    .mock-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+    .mock-stat {
+      background: #0F1117; border: 1px solid var(--border-dark);
+      border-radius: 6px; padding: 8px; text-align: center;
+    }
+    .mock-stat-val { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+    .mock-stat-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; }
+    .mock-video {
+      background: #0F1117; border: 1px solid var(--border-dark);
+      border-radius: 8px; padding: 8px 10px; margin-bottom: 5px;
+      display: flex; gap: 8px; align-items: flex-start;
+    }
+    .mock-rank { font-size: 10px; color: var(--muted); font-weight: 700; min-width: 14px; }
+    .mock-vtitle { font-size: 11px; font-weight: 600; color: var(--text-dark); flex: 1; line-height: 1.4; }
+    .mock-vscore { font-size: 12px; font-weight: 800; color: var(--green); }
+
+    @media (max-width: 768px) {
+      .preview-wrap { grid-template-columns: 1fr; }
+      .preview-mockup { display: none; }
+    }
+
+    /* ── Pricing ── */
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px; margin-top: 48px; max-width: 800px; margin-left: auto; margin-right: auto;
+    }
+    .price-card {
+      border: 1px solid #e2e8f0; border-radius: 20px; padding: 32px;
+      background: white; position: relative;
+    }
+    .price-card.popular {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+    }
+    .popular-tag {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--accent); color: white;
+      padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    }
+    .price-plan { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .price-amount { font-size: 40px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
+    .price-amount span { font-size: 16px; font-weight: 500; color: #64748b; }
+    .price-desc { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.6; }
+    .price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .price-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #374151; }
+    .pf-check { color: var(--accent); font-weight: 700; }
+    .pf-x { color: #cbd5e1; }
+    .btn-price {
+      width: 100%; padding: 12px; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      border: none; transition: all 0.15s; text-decoration: none; display: block; text-align: center;
+    }
+    .btn-price-free { background: #f1f5f9; color: #475569; }
+    .btn-price-free:hover { background: #e2e8f0; }
+    .btn-price-pro { background: var(--accent); color: white; }
+    .btn-price-pro:hover { background: var(--accent-dark); }
+
+    /* ── FAQ ── */
+    .faq-list { margin-top: 40px; max-width: 720px; margin-left: auto; margin-right: auto; }
+    .faq-item { border-bottom: 1px solid #e2e8f0; padding: 20px 0; }
+    .faq-q { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+    .faq-a { font-size: 14px; color: #64748b; line-height: 1.7; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--bg-dark);
+      border-top: 1px solid var(--border-dark);
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .footer-logo { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 16px; }
+    .footer-logo-text { font-size: 16px; font-weight: 700; color: var(--text-dark); }
+    .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { font-size: 12px; color: #4B5563; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">
+    <span class="nav-logo-icon">🎯</span>
+    <span class="nav-logo-text">TubeScout</span>
+  </a>
+  <div class="nav-right">
+    <a href="#features" class="nav-link">Funciones</a>
+    <a href="#pricing" class="nav-link">Precios</a>
+    <a href="#faq" class="nav-link">FAQ</a>
+    <a href="#" class="btn-nav">Instalar gratis →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🎯 Extensión gratuita para Chrome</div>
+  <h1>Descubre nichos de YouTube <span>antes que nadie</span></h1>
+  <p>Analiza qué videos van viral, espía a tus competidores y encuentra oportunidades de contenido con datos reales de YouTube.</p>
+  <div class="hero-cta">
+    <a href="#" class="btn-primary">🔗 Instalar en Chrome — Gratis</a>
+    <a href="#how" class="btn-secondary">Ver cómo funciona</a>
+  </div>
+  <p class="hero-note">No requiere tarjeta de crédito · 20 análisis gratis por día</p>
+</section>
+
+<!-- TRUST STRIP -->
+<div class="trust-strip">
+  <div class="trust-item"><span class="ti-icon">🎯</span> Niche Opportunity Score</div>
+  <div class="trust-item"><span class="ti-icon">🔥</span> Trending en tiempo real</div>
+  <div class="trust-item"><span class="ti-icon">📊</span> Análisis de canales</div>
+  <div class="trust-item"><span class="ti-icon">⚡</span> Overlay en YouTube</div>
+  <div class="trust-item"><span class="ti-icon">🆓</span> Plan gratuito incluido</div>
+</div>
+
+<!-- FEATURES -->
+<section class="features-bg">
+  <div class="section">
+    <div class="section-label">Funciones</div>
+    <h2 class="section-title">Todo lo que necesitas para dominar YouTube</h2>
+    <p class="section-sub">Tres herramientas en una extensión. Toma decisiones basadas en datos reales, no suposiciones.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <div class="feature-title">Niche Analyzer</div>
+        <div class="feature-desc">Ingresa cualquier keyword y obtén al instante: Opportunity Score (0-100), engagement promedio del nicho, nivel de competencia y los 20 videos con más tráfico.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <div class="feature-title">Viral Tracker</div>
+        <div class="feature-desc">Ve qué está trending ahora mismo en YouTube por categoría y región. Analiza por qué se viralizaron: engagement rate, views por día, patrón de crecimiento.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Channel Spy</div>
+        <div class="feature-desc">Analiza cualquier canal competidor: frecuencia de publicación, views promedio, horarios, sus mejores videos y el engagement real de su audiencia.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">YouTube Overlay</div>
+        <div class="feature-desc">Mientras navegas YouTube, un botón "TubeScout" aparece en cada video. Un click y ves el Viral Score, engagement rate y métricas clave sin salir de la página.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">Opportunity Score</div>
+        <div class="feature-desc">Algoritmo propietario que combina demanda del nicho vs. nivel de competencia. Score verde = oportunidad real. Score rojo = mercado saturado, difícil entrar.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📤</div>
+        <div class="feature-title">Exportación CSV <span style="font-size:11px;background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">Pro</span></div>
+        <div class="feature-desc">Descarga cualquier análisis en CSV para trabajar los datos en Excel o Google Sheets. Ideal para agencias que gestionan múltiples canales de clientes.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section">
+    <div class="section-label">Cómo funciona</div>
+    <h2 class="section-title">En 3 pasos, datos reales</h2>
+    <p class="section-sub">Sin configuraciones complicadas. Instala y empieza a analizar en menos de 2 minutos.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Instala la extensión</div>
+        <div class="step-desc">Un click en Chrome Web Store. No necesitas cuenta ni tarjeta de crédito para empezar.</div>
+      </div>
+      <div class="step-connector">→</div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Busca tu nicho</div>
+        <div class="step-desc">Escribe cualquier keyword — "finanzas personales", "gaming PC", "recetas veganas" — y analiza.</div>
+      </div>
+      <div class="step-connector">→</div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Actúa con datos</div>
+        <div class="step-desc">El Opportunity Score te dice si vale la pena entrar. Los datos de competidores te dicen cómo.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXTENSION PREVIEW -->
+<section class="preview-bg">
+  <div class="section">
+    <div class="preview-wrap">
+      <div class="preview-text">
+        <div class="section-label" style="color:#a5b4fc">La extensión</div>
+        <h2 class="section-title">Diseñada para decisiones rápidas</h2>
+        <p class="section-sub">Interface minimalista y oscura. La información que necesitas, sin ruido.</p>
+        <ul class="preview-points">
+          <li>
+            <span class="pp-icon">🎯</span>
+            <div>
+              <strong>Opportunity Score en segundos</strong>
+              Número del 0 al 100 que resume si vale la pena entrar al nicho
+            </div>
+          </li>
+          <li>
+            <span class="pp-icon">📈</span>
+            <div>
+              <strong>Top 20 videos con más tráfico</strong>
+              Con views, engagement rate y Viral Score para cada uno
+            </div>
+          </li>
+          <li>
+            <span class="pp-icon">🌍</span>
+            <div>
+              <strong>Trending por región</strong>
+              US, España, México, Argentina y Brasil — elige tu mercado
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="preview-mockup">
+        <div class="mock-header">
+          <span class="mock-logo">🎯 TubeScout</span>
+          <span class="mock-badge">⭐ Pro</span>
+        </div>
+        <div class="mock-tabs">
+          <div class="mock-tab active">🔍 Nicho</div>
+          <div class="mock-tab">🔥 Viral</div>
+          <div class="mock-tab">📊 Canal</div>
+          <div class="mock-tab">⚙️ Cuenta</div>
+        </div>
+        <div class="mock-search">finanzas personales para jóvenes…</div>
+        <div class="mock-score-card">
+          <div class="mock-ring">78</div>
+          <div>
+            <div class="mock-ring-label">Alta Oportunidad</div>
+            <div class="mock-ring-sub">Buena demanda, competencia manejable</div>
+          </div>
+        </div>
+        <div class="mock-stats">
+          <div class="mock-stat"><div class="mock-stat-val">284K</div><div class="mock-stat-lbl">Views prom.</div></div>
+          <div class="mock-stat"><div class="mock-stat-val">4.2%</div><div class="mock-stat-lbl">Engagement</div></div>
+          <div class="mock-stat"><div class="mock-stat-val">89K</div><div class="mock-stat-lbl">Subs prom.</div></div>
+        </div>
+        <div class="mock-video">
+          <div class="mock-rank">#1</div>
+          <div class="mock-vtitle">Cómo invertir $100 al mes siendo joven en 2024</div>
+          <div class="mock-vscore">82</div>
+        </div>
+        <div class="mock-video">
+          <div class="mock-rank">#2</div>
+          <div class="mock-vtitle">Los 5 errores financieros que arruinan tu vida a los 20</div>
+          <div class="mock-vscore">74</div>
+        </div>
+        <div class="mock-video">
+          <div class="mock-rank">#3</div>
+          <div class="mock-vtitle">Regla del 50/30/20 — cómo aplicarla de verdad</div>
+          <div class="mock-vscore">61</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section" style="text-align:center">
+    <div class="section-label">Precios</div>
+    <h2 class="section-title">Empieza gratis, escala cuando lo necesites</h2>
+    <p class="section-sub" style="margin:0 auto">Sin compromisos. El plan Free ya te da acceso a las funciones principales.</p>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-plan">Free</div>
+        <div class="price-amount">$0</div>
+        <div class="price-desc">Para creadores que quieren explorar oportunidades sin compromiso.</div>
+        <ul class="price-features">
+          <li><span class="pf-check">✓</span> 20 análisis de nicho por día</li>
+          <li><span class="pf-check">✓</span> Trending por categoría y región</li>
+          <li><span class="pf-check">✓</span> Análisis básico de canales</li>
+          <li><span class="pf-check">✓</span> Overlay en YouTube</li>
+          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Análisis ilimitados</span></li>
+          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Exportación CSV</span></li>
+          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Filtros avanzados</span></li>
+        </ul>
+        <a href="#" class="btn-price btn-price-free">Instalar gratis</a>
+      </div>
+      <div class="price-card popular">
+        <div class="popular-tag">Más popular</div>
+        <div class="price-plan">Pro</div>
+        <div class="price-amount">$9<span>/mes</span></div>
+        <div class="price-desc">Para creadores serios y agencias que necesitan datos sin límites.</div>
+        <ul class="price-features">
+          <li><span class="pf-check">✓</span> Análisis ilimitados</li>
+          <li><span class="pf-check">✓</span> Trending por categoría y región</li>
+          <li><span class="pf-check">✓</span> Análisis profundo de canales</li>
+          <li><span class="pf-check">✓</span> Overlay en YouTube</li>
+          <li><span class="pf-check">✓</span> Exportación CSV</li>
+          <li><span class="pf-check">✓</span> Filtros avanzados por fecha y región</li>
+          <li><span class="pf-check">✓</span> Soporte prioritario</li>
+        </ul>
+        <a href="#" class="btn-price btn-price-pro">Empezar Pro →</a>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#9ca3af;margin-top:20px">También disponible plan anual con 36% de descuento ($69/año)</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="background:#f8faff">
+  <div class="section">
+    <div class="section-label">FAQ</div>
+    <h2 class="section-title">Preguntas frecuentes</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">¿Cómo se calculan los datos? ¿Son precisos?</div>
+        <div class="faq-a">TubeScout usa la API oficial de YouTube (YouTube Data API v3). Los datos de views, likes, comentarios y suscriptores son los mismos que muestra YouTube públicamente. El Viral Score y Opportunity Score son métricas propias calculadas sobre esos datos reales.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Cuántos análisis incluye el plan Free?</div>
+        <div class="faq-a">El plan Free incluye 20 análisis de nicho o canal por día. Se resetean automáticamente a medianoche. Los videos trending se pueden ver sin límite.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Cómo funciona el Opportunity Score?</div>
+        <div class="faq-a">Combina dos factores: la demanda del nicho (basada en el engagement promedio de los top videos) y el nivel de competencia (basado en el tamaño promedio de los canales dominantes). Un score alto significa mucha demanda y competencia manejable.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Funciona para canales en español?</div>
+        <div class="faq-a">Sí. Puedes filtrar trending por región (ES, MX, AR, BR) y buscar nichos en cualquier idioma. TubeScout analiza YouTube globalmente.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Puedo cancelar el plan Pro en cualquier momento?</div>
+        <div class="faq-a">Sí. Sin permanencia ni penalizaciones. Cancelas desde tu panel en Lemon Squeezy y el acceso Pro continúa hasta el fin del período pagado.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <span style="font-size:22px">🎯</span>
+    <span class="footer-logo-text">TubeScout</span>
+  </div>
+  <div class="footer-links">
+    <a href="#features">Funciones</a>
+    <a href="#pricing">Precios</a>
+    <a href="#faq">FAQ</a>
+    <a href="mailto:hello@tubescout.io">Soporte</a>
+  </div>
+  <p class="footer-copy">© 2026 TubeScout. No afiliado a YouTube ni a Google.</p>
+</footer>
+
+</body>
+</html>
