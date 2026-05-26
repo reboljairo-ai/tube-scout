@@ -1,12 +1,22 @@
 const BACKEND_URL = 'https://tube-scout-production.up.railway.app';
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.set({
-    totalAnalysisCount: 0,
-    analysisCount: 0,
-    reviewPromptCount: 0
-  });
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+  chrome.storage.local.set({ totalAnalysisCount: 0, analysisCount: 0, reviewPromptCount: 0 });
+  chrome.sidePanel.setOptions({ enabled: false });
+});
+
+chrome.action.onClicked.addListener(async (tab) => {
+  const options = await chrome.sidePanel.getOptions({ tabId: tab.id });
+  if (options.enabled) {
+    chrome.sidePanel.setOptions({ tabId: tab.id, enabled: false });
+  } else {
+    await chrome.sidePanel.setOptions({ tabId: tab.id, enabled: true, path: 'popup.html' });
+    chrome.sidePanel.open({ tabId: tab.id });
+  }
+});
+
+chrome.tabs.onRemoved.addListener(tabId => {
+  chrome.sidePanel.setOptions({ tabId, enabled: false }).catch(() => {});
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
