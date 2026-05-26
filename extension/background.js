@@ -5,17 +5,23 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setOptions({ enabled: false });
 });
 
-chrome.action.onClicked.addListener(async (tab) => {
-  const options = await chrome.sidePanel.getOptions({ tabId: tab.id });
-  if (options.enabled) {
+// Track per-tab state in memory (avoids async before sidePanel.open)
+const tabPanelState = new Map();
+
+chrome.action.onClicked.addListener((tab) => {
+  if (tabPanelState.get(tab.id)) {
     chrome.sidePanel.setOptions({ tabId: tab.id, enabled: false });
+    tabPanelState.set(tab.id, false);
   } else {
-    await chrome.sidePanel.setOptions({ tabId: tab.id, enabled: true, path: 'popup.html' });
+    // setOptions + open must stay synchronous to satisfy user-gesture requirement
+    chrome.sidePanel.setOptions({ tabId: tab.id, enabled: true, path: 'popup.html' });
     chrome.sidePanel.open({ tabId: tab.id });
+    tabPanelState.set(tab.id, true);
   }
 });
 
 chrome.tabs.onRemoved.addListener(tabId => {
+  tabPanelState.delete(tabId);
   chrome.sidePanel.setOptions({ tabId, enabled: false }).catch(() => {});
 });
 

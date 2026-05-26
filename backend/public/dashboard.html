@@ -34,8 +34,8 @@
     .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text); }
     .nav-right { display: flex; align-items: center; gap: 12px; }
     .nav-user { font-size: 13px; color: var(--muted); }
-    .nav-badge-pro { background: var(--accent); color: white; font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 700; }
-    .nav-badge-free { background: var(--card); color: var(--muted); border: 1px solid var(--border); font-size: 11px; padding: 3px 9px; border-radius: 20px; font-weight: 700; }
+    .badge-pro { background: linear-gradient(135deg,#6C63FF,#4ADE80); color: white; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
+    .badge-free { background: var(--card); color: var(--muted); border: 1px solid var(--border); font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
     .btn-logout { font-size: 13px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: color 0.15s; }
     .btn-logout:hover { color: var(--red); }
 
@@ -60,7 +60,7 @@
     }
     .auth-input:focus { outline: none; border-color: var(--accent); }
     .btn-auth {
-      width: 100%; padding: 12px; background: var(--accent); color: white;
+      width: 100%; padding: 13px; background: var(--accent); color: white;
       border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
       cursor: pointer; transition: background 0.15s;
     }
@@ -72,39 +72,45 @@
     .auth-msg.error { color: var(--red); }
     .auth-msg.ok { color: var(--green); }
 
-    /* ── Dashboard ── */
+    /* ── Dashboard layout ── */
     #dashboard-screen { display: none; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
 
     /* Stats bar */
     .stats-bar {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px; margin-bottom: 32px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px; margin-bottom: 28px;
     }
     .stat-card {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 20px;
+      border-radius: 14px; padding: 18px 20px;
     }
-    .stat-card-val { font-size: 28px; font-weight: 800; color: var(--text); }
-    .stat-card-val.green { color: var(--green); }
-    .stat-card-val.accent { color: var(--accent); }
-    .stat-card-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stat-val { font-size: 28px; font-weight: 800; }
+    .stat-val.accent { color: var(--accent); }
+    .stat-val.green { color: var(--green); }
+    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
     /* Plan banner */
     .plan-banner {
-      border-radius: 14px; padding: 20px 24px; margin-bottom: 32px;
+      border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
       display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
     }
-    .plan-banner.free { background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(108,99,255,0.03)); border: 1px solid var(--border); }
-    .plan-banner.pro { background: linear-gradient(135deg, rgba(108,99,255,0.2), rgba(74,222,128,0.08)); border: 1px solid rgba(108,99,255,0.4); }
-    .plan-banner-info { display: flex; flex-direction: column; gap: 4px; }
-    .plan-banner-title { font-size: 15px; font-weight: 700; color: var(--text); }
-    .plan-banner-sub { font-size: 13px; color: var(--muted); }
-    .btn-upgrade {
-      padding: 10px 20px; background: var(--accent); color: white;
-      border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
-      cursor: pointer; text-decoration: none; transition: background 0.15s; white-space: nowrap;
+    .plan-banner.free {
+      background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(108,99,255,0.03));
+      border: 1px solid rgba(108,99,255,0.25);
     }
-    .btn-upgrade:hover { background: var(--accent-dark); }
+    .plan-banner.pro {
+      background: linear-gradient(135deg, rgba(108,99,255,0.18), rgba(74,222,128,0.08));
+      border: 1px solid rgba(108,99,255,0.5);
+    }
+    .plan-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .plan-sub { font-size: 13px; color: var(--muted); }
+    .btn-upgrade {
+      padding: 11px 22px; background: var(--accent); color: white;
+      border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
+      cursor: pointer; text-decoration: none; transition: all 0.15s; white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(108,99,255,0.35);
+    }
+    .btn-upgrade:hover { background: var(--accent-dark); transform: translateY(-1px); }
 
     /* Sections */
     .dash-section { margin-bottom: 40px; }
@@ -112,47 +118,70 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 16px;
     }
-    .dash-section-title { font-size: 16px; font-weight: 700; color: var(--text); }
-    .dash-section-count { font-size: 13px; color: var(--muted); }
+    .dash-section-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .dash-count { font-size: 13px; color: var(--muted); }
 
-    /* History list */
+    /* ── PAYWALL ── */
+    .locked-section { position: relative; }
+    .locked-overlay {
+      position: absolute; inset: 0;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(to bottom, transparent 0%, rgba(15,17,23,0.7) 30%, rgba(15,17,23,0.95) 60%);
+      border-radius: 14px;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      padding: 32px 24px; z-index: 10;
+    }
+    .locked-icon { font-size: 32px; margin-bottom: 12px; }
+    .locked-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; text-align: center; }
+    .locked-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; text-align: center; max-width: 320px; line-height: 1.6; }
+    .btn-unlock {
+      padding: 12px 28px; background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      color: white; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none;
+      box-shadow: 0 4px 20px rgba(108,99,255,0.4); transition: all 0.15s;
+    }
+    .btn-unlock:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(108,99,255,0.5); }
+    .locked-perks {
+      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .locked-perk { font-size: 12px; color: #a5b4fc; display: flex; align-items: center; gap: 5px; }
+
+    /* History */
     .history-list { display: flex; flex-direction: column; gap: 8px; }
     .history-item {
       background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 16px;
-      display: flex; align-items: center; gap: 14px;
+      border-radius: 10px; padding: 13px 16px;
+      display: flex; align-items: center; gap: 12px;
       transition: border-color 0.15s;
     }
-    .history-item:hover { border-color: rgba(108,99,255,0.4); }
-    .history-type-icon {
-      width: 36px; height: 36px; border-radius: 8px;
+    .history-item:hover { border-color: rgba(108,99,255,0.35); }
+    .h-icon {
+      width: 34px; height: 34px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; flex-shrink: 0;
+      font-size: 15px; flex-shrink: 0;
     }
-    .history-type-icon.niche { background: rgba(108,99,255,0.15); }
-    .history-type-icon.channel { background: rgba(74,222,128,0.12); }
-    .history-type-icon.keywords { background: rgba(251,191,36,0.12); }
-    .history-type-icon.titles { background: rgba(248,113,113,0.12); }
-    .history-query { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
-    .history-meta { font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
-    .history-date { display: block; }
-    .history-type-label { display: block; margin-top: 2px; }
+    .h-icon.niche { background: rgba(108,99,255,0.15); }
+    .h-icon.channel { background: rgba(74,222,128,0.12); }
+    .h-icon.keywords { background: rgba(251,191,36,0.12); }
+    .h-icon.titles { background: rgba(248,113,113,0.12); }
+    .h-query { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .h-meta { font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
+    .h-date { display: block; }
+    .h-type { display: block; margin-top: 2px; }
 
-    /* Favorites list */
-    .fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    /* Favorites */
+    .fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
     .fav-card {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 16px;
       display: flex; flex-direction: column; gap: 10px;
       transition: border-color 0.15s;
     }
-    .fav-card:hover { border-color: rgba(108,99,255,0.4); }
-    .fav-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .fav-card:hover { border-color: rgba(108,99,255,0.35); }
+    .fav-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .fav-query { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
-    .fav-score {
-      font-size: 13px; font-weight: 800; padding: 3px 8px;
-      border-radius: 8px; flex-shrink: 0;
-    }
+    .fav-score { font-size: 13px; font-weight: 800; padding: 3px 9px; border-radius: 8px; flex-shrink: 0; }
     .fav-score.high { background: rgba(74,222,128,0.15); color: var(--green); }
     .fav-score.mid { background: rgba(251,191,36,0.15); color: var(--yellow); }
     .fav-score.low { background: rgba(248,113,113,0.15); color: var(--red); }
@@ -165,28 +194,29 @@
     }
     .btn-fav-del:hover { border-color: var(--red); color: var(--red); }
 
-    /* Empty states */
-    .empty-state {
-      text-align: center; padding: 48px 24px;
-      color: var(--muted); font-size: 14px;
-    }
-    .empty-state-icon { font-size: 40px; display: block; margin-bottom: 12px; }
-
-    /* Loading */
-    .loading {
-      display: flex; align-items: center; justify-content: center;
-      padding: 40px; gap: 10px; color: var(--muted); font-size: 14px;
-    }
-    .spinner {
-      width: 20px; height: 20px; border: 2px solid var(--border);
-      border-top-color: var(--accent); border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
+    /* Empty & loading */
+    .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 14px; }
+    .empty-icon { font-size: 36px; display: block; margin-bottom: 12px; }
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; gap: 10px; color: var(--muted); font-size: 14px; }
+    .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Pro feature cards (CTA section for free users) */
+    .pro-features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 8px;
+    }
+    .pro-feat-card {
+      background: rgba(108,99,255,0.06); border: 1px solid rgba(108,99,255,0.2);
+      border-radius: 12px; padding: 16px; text-align: center;
+    }
+    .pro-feat-icon { font-size: 26px; margin-bottom: 8px; }
+    .pro-feat-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .pro-feat-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
 
     @media (max-width: 600px) {
       #dashboard-screen { padding: 20px 16px; }
-      .history-type-label { display: none; }
+      .h-type { display: none; }
+      .auth-card { padding: 28px 20px; }
     }
   </style>
 </head>
@@ -199,8 +229,8 @@
   </a>
   <div class="nav-right">
     <span class="nav-user" id="nav-email"></span>
-    <span id="nav-plan-badge"></span>
-    <button class="btn-logout" id="btn-logout" style="display:none" onclick="logout()">Cerrar sesión</button>
+    <span id="nav-badge"></span>
+    <button class="btn-logout" id="btn-logout" style="display:none" onclick="logout()">Salir</button>
   </div>
 </nav>
 
@@ -211,13 +241,11 @@
     <div class="auth-title">Accede a tu Dashboard</div>
     <div class="auth-sub" id="auth-sub">Ingresa tu email para ver tu historial, favoritos y estadísticas.</div>
 
-    <!-- Step 1: Email -->
     <div id="step-email">
       <input type="email" class="auth-input" id="input-email" placeholder="tu@email.com" />
       <button class="btn-auth" id="btn-send-code" onclick="sendCode()">Enviar código de acceso</button>
     </div>
 
-    <!-- Step 2: Code -->
     <div id="step-code" style="display:none">
       <input type="text" class="auth-input" id="input-code" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center;letter-spacing:0.2em;font-size:20px" />
       <button class="btn-auth" id="btn-verify-code" onclick="verifyCode()">Verificar y entrar</button>
@@ -230,75 +258,112 @@
 
 <!-- DASHBOARD SCREEN -->
 <div id="dashboard-screen">
+
   <!-- Stats bar -->
   <div class="stats-bar">
     <div class="stat-card">
-      <div class="stat-card-val accent" id="stat-today">–</div>
-      <div class="stat-card-lbl">Análisis hoy</div>
+      <div class="stat-val accent" id="stat-today">–</div>
+      <div class="stat-lbl">Análisis hoy</div>
     </div>
     <div class="stat-card">
-      <div class="stat-card-val" id="stat-limit">–</div>
-      <div class="stat-card-lbl">Límite diario</div>
+      <div class="stat-val" id="stat-limit">–</div>
+      <div class="stat-lbl">Límite diario</div>
     </div>
     <div class="stat-card">
-      <div class="stat-card-val green" id="stat-total">–</div>
-      <div class="stat-card-lbl">Análisis totales</div>
+      <div class="stat-val green" id="stat-total">–</div>
+      <div class="stat-lbl">Análisis totales</div>
     </div>
     <div class="stat-card">
-      <div class="stat-card-val" id="stat-favs">–</div>
-      <div class="stat-card-lbl">Favoritos guardados</div>
+      <div class="stat-val" id="stat-favs">–</div>
+      <div class="stat-lbl">Favoritos guardados</div>
     </div>
   </div>
 
   <!-- Plan banner -->
   <div class="plan-banner free" id="plan-banner">
-    <div class="plan-banner-info">
-      <div class="plan-banner-title" id="plan-banner-title">Plan Free</div>
-      <div class="plan-banner-sub" id="plan-banner-sub">Actualiza a Pro para análisis ilimitados y acceso completo al historial.</div>
+    <div>
+      <div class="plan-title" id="plan-title">Plan Free</div>
+      <div class="plan-sub" id="plan-sub">Desbloquea análisis ilimitados, historial completo y favoritos sincronizados.</div>
     </div>
-    <a href="/#pricing" class="btn-upgrade" id="plan-banner-btn">Actualizar a Pro →</a>
+    <a href="/#pricing" class="btn-upgrade" id="plan-btn">⭐ Actualizar a Pro — $9/mes</a>
   </div>
 
-  <!-- Favoritos -->
+  <!-- FAVORITOS -->
   <div class="dash-section">
     <div class="dash-section-header">
       <div class="dash-section-title">⭐ Nichos Favoritos</div>
-      <div class="dash-section-count" id="fav-count"></div>
+      <div class="dash-count" id="fav-count"></div>
     </div>
-    <div id="fav-container"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+    <div class="locked-section" id="fav-section">
+      <div id="fav-container"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+      <!-- Overlay se inserta dinámicamente para usuarios free sin favoritos suficientes -->
+    </div>
   </div>
 
-  <!-- Historial -->
+  <!-- HISTORIAL -->
   <div class="dash-section">
     <div class="dash-section-header">
       <div class="dash-section-title">🕐 Historial de Análisis</div>
-      <div class="dash-section-count" id="history-count"></div>
+      <div class="dash-count" id="history-count"></div>
     </div>
-    <div id="history-container"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+    <div class="locked-section" id="history-section">
+      <div id="history-container"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
+    </div>
   </div>
+
+  <!-- PRO CTA (solo para free) -->
+  <div id="pro-cta-section" style="display:none; margin-bottom:40px">
+    <div class="dash-section-header">
+      <div class="dash-section-title">🚀 Funciones exclusivas Pro</div>
+    </div>
+    <div class="pro-features-grid">
+      <div class="pro-feat-card">
+        <div class="pro-feat-icon">♾️</div>
+        <div class="pro-feat-title">Análisis ilimitados</div>
+        <div class="pro-feat-desc">Sin límite diario. Analiza todos los nichos que quieras.</div>
+      </div>
+      <div class="pro-feat-card">
+        <div class="pro-feat-icon">📋</div>
+        <div class="pro-feat-title">Historial completo</div>
+        <div class="pro-feat-desc">Accede a todos tus análisis anteriores. Free solo muestra los últimos 3.</div>
+      </div>
+      <div class="pro-feat-card">
+        <div class="pro-feat-icon">⭐</div>
+        <div class="pro-feat-title">Favoritos ilimitados</div>
+        <div class="pro-feat-desc">Guarda todos los nichos que quieras. Free solo muestra 2.</div>
+      </div>
+      <div class="pro-feat-card">
+        <div class="pro-feat-icon">📊</div>
+        <div class="pro-feat-title">Exportación CSV</div>
+        <div class="pro-feat-desc">Descarga cualquier análisis en Excel o Google Sheets.</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:24px">
+      <a href="/#pricing" class="btn-unlock">⭐ Desbloquear todo con Pro — $9/mes</a>
+    </div>
+  </div>
+
 </div>
 
 <script>
 const API = 'https://tube-scout-production.up.railway.app';
 let token = localStorage.getItem('ts_token');
+let isPro = false;
 
 const typeIcons = {
-  niche: { emoji: '🔍', label: 'Nicho', cls: 'niche' },
-  channel: { emoji: '📊', label: 'Canal', cls: 'channel' },
+  niche:    { emoji: '🔍', label: 'Nicho',    cls: 'niche' },
+  channel:  { emoji: '📊', label: 'Canal',    cls: 'channel' },
   keywords: { emoji: '🔑', label: 'Keywords', cls: 'keywords' },
-  titles: { emoji: '✏️', label: 'Títulos', cls: 'titles' },
+  titles:   { emoji: '✏️', label: 'Títulos',  cls: 'titles' },
 };
 
-function setMsg(txt, type = '') {
+/* ── Auth ── */
+function setMsg(txt, type='') {
   const el = document.getElementById('auth-msg');
-  el.textContent = txt;
-  el.className = 'auth-msg ' + type;
+  el.textContent = txt; el.className = 'auth-msg ' + type;
 }
-
 function setBtn(id, disabled, text) {
-  const btn = document.getElementById(id);
-  btn.disabled = disabled;
-  if (text) btn.textContent = text;
+  const b = document.getElementById(id); b.disabled = disabled; if (text) b.textContent = text;
 }
 
 async function sendCode() {
@@ -308,37 +373,31 @@ async function sendCode() {
   setMsg('');
   try {
     const res = await fetch(`${API}/api/auth/request-code`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email })
     });
     const data = await res.json();
     if (data.success) {
       document.getElementById('step-email').style.display = 'none';
       document.getElementById('step-code').style.display = 'block';
-      document.getElementById('auth-sub').textContent = `Código enviado a ${email}. Revisa tu bandeja de entrada.`;
+      document.getElementById('auth-sub').textContent = `Código enviado a ${email}. Revisa tu bandeja.`;
       if (data.devCode) setMsg(`[DEV] Código: ${data.devCode}`, 'ok');
       localStorage.setItem('ts_pending_email', email);
     } else {
       setMsg(data.error || 'Error al enviar el código.', 'error');
     }
-  } catch {
-    setMsg('Error de conexión con el servidor.', 'error');
-  }
+  } catch { setMsg('Error de conexión.', 'error'); }
   setBtn('btn-send-code', false, 'Enviar código de acceso');
 }
 
 async function verifyCode() {
   const email = localStorage.getItem('ts_pending_email') || document.getElementById('input-email').value.trim();
-  const code = document.getElementById('input-code').value.trim();
+  const code  = document.getElementById('input-code').value.trim();
   if (!code || code.length < 6) return setMsg('Ingresa el código de 6 dígitos.', 'error');
   setBtn('btn-verify-code', true, 'Verificando...');
   setMsg('');
   try {
     const res = await fetch(`${API}/api/auth/verify-code`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code })
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ email, code })
     });
     const data = await res.json();
     if (data.accessToken) {
@@ -349,9 +408,7 @@ async function verifyCode() {
     } else {
       setMsg(data.error || 'Código incorrecto.', 'error');
     }
-  } catch {
-    setMsg('Error de conexión con el servidor.', 'error');
-  }
+  } catch { setMsg('Error de conexión.', 'error'); }
   setBtn('btn-verify-code', false, 'Verificar y entrar');
 }
 
@@ -364,59 +421,78 @@ function backToEmail() {
 
 function logout() {
   localStorage.removeItem('ts_token');
-  token = null;
+  token = null; isPro = false;
   document.getElementById('dashboard-screen').style.display = 'none';
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('btn-logout').style.display = 'none';
   document.getElementById('nav-email').textContent = '';
-  document.getElementById('nav-plan-badge').innerHTML = '';
+  document.getElementById('nav-badge').innerHTML = '';
   backToEmail();
 }
 
+/* ── API ── */
 async function apiFetch(path) {
-  const res = await fetch(`${API}${path}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  const res = await fetch(`${API}${path}`, { headers: {'Authorization': `Bearer ${token}`} });
   if (res.status === 401) { logout(); throw new Error('No autenticado'); }
   return res.json();
 }
 
 async function deleteFavorite(id) {
-  await fetch(`${API}/api/favorites/${id}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  await fetch(`${API}/api/favorites/${id}`, { method:'DELETE', headers:{'Authorization':`Bearer ${token}`} });
   loadFavorites();
 }
 
-function scoreClass(score) {
-  if (!score) return '';
-  if (score >= 65) return 'high';
-  if (score >= 40) return 'mid';
-  return 'low';
-}
-
+/* ── Helpers ── */
+function scoreClass(s) { return s >= 65 ? 'high' : s >= 40 ? 'mid' : 'low'; }
 function formatDate(iso) {
   if (!iso) return '';
-  const d = new Date(iso);
-  return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('es', {day:'2-digit', month:'short', year:'numeric'});
+}
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function addLockedOverlay(sectionId, title, subtitle) {
+  const section = document.getElementById(sectionId);
+  // Remove existing overlay if any
+  section.querySelectorAll('.locked-overlay').forEach(el => el.remove());
+  const overlay = document.createElement('div');
+  overlay.className = 'locked-overlay';
+  overlay.innerHTML = `
+    <div class="locked-icon">🔒</div>
+    <div class="locked-title">${title}</div>
+    <div class="locked-sub">${subtitle}</div>
+    <div class="locked-perks">
+      <span class="locked-perk">♾️ Análisis ilimitados</span>
+      <span class="locked-perk">📋 Historial completo</span>
+      <span class="locked-perk">⭐ Favoritos ilimitados</span>
+    </div>
+    <a href="/#pricing" class="btn-unlock">⭐ Desbloquear con Pro — $9/mes</a>
+  `;
+  section.appendChild(overlay);
+}
+
+/* ── Load data ── */
 async function loadStats() {
   try {
     const data = await apiFetch('/api/user/stats');
-    document.getElementById('stat-today').textContent = data.todayCount ?? '–';
-    document.getElementById('stat-limit').textContent = data.dailyLimit ?? '–';
-    document.getElementById('stat-total').textContent = data.totalSearches ?? '–';
-    document.getElementById('nav-email').textContent = data.email || '';
-    if (data.isPro) {
-      document.getElementById('nav-plan-badge').innerHTML = '<span class="nav-badge-pro">⭐ Pro</span>';
-      document.getElementById('plan-banner').className = 'plan-banner pro';
-      document.getElementById('plan-banner-title').textContent = '⭐ Plan Pro activo';
-      document.getElementById('plan-banner-sub').textContent = 'Análisis ilimitados · Historial completo · Favoritos sincronizados';
-      document.getElementById('plan-banner-btn').style.display = 'none';
+    document.getElementById('stat-today').textContent  = data.todayCount ?? '–';
+    document.getElementById('stat-limit').textContent  = data.dailyLimit ?? '–';
+    document.getElementById('stat-total').textContent  = data.totalSearches ?? '–';
+    document.getElementById('nav-email').textContent   = data.email || '';
+    isPro = !!data.isPro;
+
+    if (isPro) {
+      document.getElementById('nav-badge').innerHTML = '<span class="badge-pro">⭐ Pro</span>';
+      const b = document.getElementById('plan-banner');
+      b.className = 'plan-banner pro';
+      document.getElementById('plan-title').textContent = '⭐ Plan Pro activo';
+      document.getElementById('plan-sub').textContent   = 'Análisis ilimitados · Historial completo · Favoritos sincronizados · Exportación CSV';
+      document.getElementById('plan-btn').style.display = 'none';
+      document.getElementById('pro-cta-section').style.display = 'none';
     } else {
-      document.getElementById('nav-plan-badge').innerHTML = '<span class="nav-badge-free">Free</span>';
+      document.getElementById('nav-badge').innerHTML = '<span class="badge-free">Free</span>';
+      document.getElementById('pro-cta-section').style.display = 'block';
     }
   } catch {}
 }
@@ -425,77 +501,137 @@ async function loadFavorites() {
   const container = document.getElementById('fav-container');
   try {
     const { data } = await apiFetch('/api/favorites');
-    document.getElementById('stat-favs').textContent = data.length;
-    document.getElementById('fav-count').textContent = `${data.length} guardados`;
-    if (!data.length) {
-      container.innerHTML = `<div class="empty-state"><span class="empty-state-icon">⭐</span>Aún no tienes favoritos guardados.<br>Usa la extensión para guardar nichos prometedores.</div>`;
+    const total = data.length;
+    document.getElementById('stat-favs').textContent = total;
+    document.getElementById('fav-count').textContent = `${total} guardados`;
+
+    if (!total) {
+      container.innerHTML = `<div class="empty-state"><span class="empty-icon">⭐</span>Aún no tienes favoritos.<br>Usa la extensión para guardar nichos prometedores.</div>`;
+      if (!isPro) {
+        addLockedOverlay('fav-section',
+          'Tus favoritos sincronizados en Pro',
+          'Con el plan Pro, guarda nichos ilimitados y accédelos desde cualquier dispositivo.'
+        );
+      }
       return;
     }
-    container.innerHTML = `<div class="fav-grid">${data.map(f => `
-      <div class="fav-card">
-        <div class="fav-card-top">
-          <div class="fav-query">${escapeHtml(f.query)}</div>
-          ${f.score ? `<div class="fav-score ${scoreClass(f.score)}">${f.score}</div>` : ''}
+
+    // Free users: show max 2, blur the rest
+    const visible = isPro ? data : data.slice(0, 2);
+    const hidden  = isPro ? [] : data.slice(2);
+
+    let html = `<div class="fav-grid">${visible.map(f => favCardHTML(f)).join('')}`;
+    if (hidden.length) {
+      // Show blurred ghost cards so user sees there's more
+      html += hidden.map(() => `
+        <div class="fav-card" style="filter:blur(5px);pointer-events:none;user-select:none;opacity:0.5">
+          <div class="fav-top"><div class="fav-query">████████████</div><div class="fav-score high">78</div></div>
+          <div class="fav-date">15 may 2026</div>
         </div>
-        <div class="fav-date">${formatDate(f.created_at)}</div>
-        <button class="btn-fav-del" onclick="deleteFavorite('${f.id}')">Eliminar</button>
-      </div>
-    `).join('')}</div>`;
+      `).join('');
+    }
+    html += `</div>`;
+    container.innerHTML = html;
+
+    if (!isPro && total > 2) {
+      addLockedOverlay('fav-section',
+        `Tienes ${total} favoritos guardados`,
+        `Solo puedes ver 2 con el plan Free. Actualiza a Pro para acceder a todos tus favoritos.`
+      );
+    }
   } catch {
-    container.innerHTML = `<div class="empty-state"><span class="empty-state-icon">⚠️</span>Error al cargar favoritos.</div>`;
+    container.innerHTML = `<div class="empty-state"><span class="empty-icon">⚠️</span>Error al cargar favoritos.</div>`;
   }
+}
+
+function favCardHTML(f) {
+  return `
+    <div class="fav-card">
+      <div class="fav-top">
+        <div class="fav-query">${escapeHtml(f.query)}</div>
+        ${f.score ? `<div class="fav-score ${scoreClass(f.score)}">${f.score}</div>` : ''}
+      </div>
+      <div class="fav-date">${formatDate(f.created_at)}</div>
+      <button class="btn-fav-del" onclick="deleteFavorite('${f.id}')">Eliminar</button>
+    </div>
+  `;
 }
 
 async function loadHistory() {
   const container = document.getElementById('history-container');
   try {
     const { data } = await apiFetch('/api/history');
-    document.getElementById('history-count').textContent = `${data.length} registros`;
-    if (!data.length) {
-      container.innerHTML = `<div class="empty-state"><span class="empty-state-icon">🕐</span>Tu historial aparecerá aquí cuando uses la extensión.</div>`;
+    const total = data.length;
+    document.getElementById('history-count').textContent = `${total} registros`;
+
+    if (!total) {
+      container.innerHTML = `<div class="empty-state"><span class="empty-icon">🕐</span>Tu historial aparecerá aquí cuando uses la extensión.</div>`;
       return;
     }
-    container.innerHTML = `<div class="history-list">${data.map(item => {
-      const t = typeIcons[item.type] || { emoji: '🔍', label: item.type, cls: 'niche' };
-      return `
-        <div class="history-item">
-          <div class="history-type-icon ${t.cls}">${t.emoji}</div>
-          <div class="history-query">${escapeHtml(item.query)}</div>
-          <div class="history-meta">
-            <span class="history-date">${formatDate(item.created_at)}</span>
-            <span class="history-type-label" style="color:var(--muted)">${t.label}</span>
+
+    // Free users: show only last 3, blur a preview of more
+    const visible = isPro ? data : data.slice(0, 3);
+    const hiddenCount = isPro ? 0 : Math.max(0, total - 3);
+
+    let html = `<div class="history-list">${visible.map(item => historyItemHTML(item)).join('')}`;
+    if (hiddenCount > 0) {
+      // Ghost blurred rows
+      const ghosts = Math.min(hiddenCount, 4);
+      const ghostQueries = ['finanzas personales para jóvenes', 'minecraft tutorials 2025', 'recetas veganas fáciles', 'gaming setup barrato'];
+      for (let i = 0; i < ghosts; i++) {
+        html += `
+          <div class="history-item" style="filter:blur(5px);pointer-events:none;user-select:none;opacity:0.45">
+            <div class="h-icon niche">🔍</div>
+            <div class="h-query">${ghostQueries[i % ghostQueries.length]}</div>
+            <div class="h-meta"><span class="h-date">12 may 2026</span><span class="h-type">Nicho</span></div>
           </div>
-        </div>
-      `;
-    }).join('')}</div>`;
+        `;
+      }
+    }
+    html += `</div>`;
+    container.innerHTML = html;
+
+    if (!isPro && hiddenCount > 0) {
+      addLockedOverlay('history-section',
+        `${hiddenCount} análisis bloqueados`,
+        `Con el plan Free solo ves los últimos 3. Actualiza a Pro para acceder a todo tu historial.`
+      );
+    }
   } catch {
-    container.innerHTML = `<div class="empty-state"><span class="empty-state-icon">⚠️</span>Error al cargar el historial.</div>`;
+    container.innerHTML = `<div class="empty-state"><span class="empty-icon">⚠️</span>Error al cargar el historial.</div>`;
   }
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function historyItemHTML(item) {
+  const t = typeIcons[item.type] || { emoji:'🔍', label: item.type, cls:'niche' };
+  return `
+    <div class="history-item">
+      <div class="h-icon ${t.cls}">${t.emoji}</div>
+      <div class="h-query">${escapeHtml(item.query)}</div>
+      <div class="h-meta">
+        <span class="h-date">${formatDate(item.created_at)}</span>
+        <span class="h-type" style="color:var(--muted)">${t.label}</span>
+      </div>
+    </div>
+  `;
 }
 
 async function showDashboard() {
-  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display  = 'none';
   document.getElementById('dashboard-screen').style.display = 'block';
-  document.getElementById('btn-logout').style.display = 'inline-block';
-  await Promise.all([loadStats(), loadFavorites(), loadHistory()]);
+  document.getElementById('btn-logout').style.display   = 'inline-block';
+  await loadStats();
+  await Promise.all([loadFavorites(), loadHistory()]);
 }
 
-// Auto-login if token exists
-if (token) {
-  showDashboard();
-}
+// Auto-login
+if (token) showDashboard();
 
 // Enter key support
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-  const stepEmail = document.getElementById('step-email');
-  const stepCode = document.getElementById('step-code');
-  if (stepEmail.style.display !== 'none') sendCode();
-  else if (stepCode.style.display !== 'none') verifyCode();
+  if (document.getElementById('step-email').style.display !== 'none') sendCode();
+  else if (document.getElementById('step-code').style.display !== 'none') verifyCode();
 });
 </script>
 </body>
