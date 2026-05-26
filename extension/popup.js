@@ -33,6 +33,8 @@ async function init() {
   }
   renderHistory('niche-history', 'nicheHistory');
   renderHistory('kw-history', 'kwHistory');
+  const { pendingModalStep } = await chrome.storage.local.get('pendingModalStep');
+  if (pendingModalStep) openModal(pendingModalStep);
 }
 
 function showFreeState(count) {
@@ -95,12 +97,23 @@ async function renderHistory(containerId, storageKey) {
 }
 
 // ── Email modal ───────────────────────────────────────────
-function openModal() {
+async function openModal(step = 'email') {
   $('modal-overlay').style.display = 'flex';
-  $('step-email').style.display = 'block';
-  $('step-code').style.display = 'none';
+  if (step === 'code') {
+    $('step-email').style.display = 'none';
+    $('step-code').style.display = 'block';
+    const { pendingEmail, pendingDevCode } = await chrome.storage.local.get(['pendingEmail', 'pendingDevCode']);
+    if (pendingEmail) $('modal-email').value = pendingEmail;
+    if (pendingDevCode) showModalMsg('code', `[DEV] Tu código: ${pendingDevCode}`, 'success');
+  } else {
+    $('step-email').style.display = 'block';
+    $('step-code').style.display = 'none';
+  }
 }
-function closeModal() { $('modal-overlay').style.display = 'none'; }
+async function closeModal() {
+  $('modal-overlay').style.display = 'none';
+  await chrome.storage.local.remove(['pendingEmail', 'pendingDevCode', 'pendingModalStep']);
+}
 
 $('send-code-btn')?.addEventListener('click', async () => {
   const email = $('modal-email').value.trim();
@@ -111,11 +124,14 @@ $('send-code-btn')?.addEventListener('click', async () => {
   $('send-code-btn').disabled = false;
   $('send-code-btn').textContent = 'Enviar código';
   if (resp.success) {
+    await chrome.storage.local.set({
+      pendingEmail: email,
+      pendingModalStep: 'code',
+      ...(resp.devCode ? { pendingDevCode: resp.devCode } : {})
+    });
     $('step-email').style.display = 'none';
     $('step-code').style.display = 'block';
-    if (resp.devCode) {
-      showModalMsg('code', `[DEV] Tu código: ${resp.devCode}`, 'success');
-    }
+    if (resp.devCode) showModalMsg('code', `[DEV] Tu código: ${resp.devCode}`, 'success');
   } else {
     showModalMsg('email', resp.error || 'Error al enviar', 'error');
   }
@@ -132,6 +148,7 @@ $('verify-code-btn')?.addEventListener('click', async () => {
   $('verify-code-btn').textContent = 'Verificar código';
   if (resp.success) {
     await chrome.storage.local.set({ accessToken: resp.token, guestCount: 0 });
+    await chrome.storage.local.remove(['pendingEmail', 'pendingDevCode', 'pendingModalStep']);
     showModalMsg('code', 'Listo! 10 búsquedas/día desbloqueadas.', 'success');
     setTimeout(() => { closeModal(); init(); }, 1200);
   } else {
@@ -139,7 +156,8 @@ $('verify-code-btn')?.addEventListener('click', async () => {
   }
 });
 
-$('back-to-email')?.addEventListener('click', () => {
+$('back-to-email')?.addEventListener('click', async () => {
+  await chrome.storage.local.remove(['pendingEmail', 'pendingDevCode', 'pendingModalStep']);
   $('step-email').style.display = 'block';
   $('step-code').style.display = 'none';
 });
