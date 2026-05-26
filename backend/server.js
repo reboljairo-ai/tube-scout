@@ -1,7 +1,46 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const { Pool } = require('pg');
 const app = express();
+
+const db = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+
+async function initDB() {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      email TEXT UNIQUE NOT NULL,
+      is_pro BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      token TEXT PRIMARY KEY,
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      daily_count INT DEFAULT 0,
+      last_reset TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS search_history (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      query TEXT NOT NULL,
+      data JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS favorites (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      query TEXT NOT NULL,
+      score INT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, query)
+    );
+  `);
+  console.log('DB ready');
+}
+initDB().catch(console.error);
 
 const YT_KEY = process.env.YOUTUBE_API_KEY;
 const LS_KEY = process.env.LEMON_SQUEEZY_API_KEY;
@@ -80,28 +119,39 @@ function generateTitleFormulas(query) {
   ];
 }
 
-// ── In-memory auth stores ─────────────────────────────────
-const pendingCodes = new Map(); // email -> { code, expires }
-const userTokens = new Map();  // token -> { email, dailyCount, lastReset }
+// ── In-memory pending codes (short-lived, ok in-memory) ──
+const pendingCodes = new Map();
 
-function getRegisteredUser(req) {
+async function getRegisteredUser(req) {
   const auth = req.headers.authorization?.replace('Bearer ', '');
   if (!auth) return null;
-  return userTokens.get(auth) || null;
+  const { rows } = await db.query(
+    'SELECT t.token, t.daily_count, t.last_reset, u.id as user_id, u.email, u.is_pro FROM auth_tokens t JOIN users u ON t.user_id = u.id WHERE t.token = $1',
+    [auth]
+  );
+  return rows[0] || null;
 }
 
-function checkDailyLimit(userData, res) {
+async function checkDailyLimit(userData, res) {
   const today = new Date().toDateString();
-  if (userData.lastReset !== today) {
-    userData.dailyCount = 0;
-    userData.lastReset = today;
+  if (userData.last_reset !== today) {
+    await db.query('UPDATE auth_tokens SET daily_count = 1, last_reset = $1 WHERE token = $2', [today, userData.token]);
+    return true;
   }
-  if (userData.dailyCount >= 10) {
+  const limit = userData.is_pro ? 999 : 10;
+  if (userData.daily_count >= limit) {
     res.status(429).json({ error: 'Límite diario alcanzado. Actualiza a Pro para análisis ilimitados.' });
     return false;
   }
-  userData.dailyCount++;
+  await db.query('UPDATE auth_tokens SET daily_count = daily_count + 1 WHERE token = $1', [userData.token]);
   return true;
+}
+
+async function saveHistory(userId, type, query, data) {
+  await db.query(
+    'INSERT INTO search_history (user_id, type, query, data) VALUES ($1, $2, $3, $4)',
+    [userId, type, query, JSON.stringify(data)]
+  ).catch(() => {});
 }
 
 function limitResults(data, isRegistered, type) {
@@ -209,7 +259,7 @@ app.post('/api/auth/request-code', async (req, res) => {
   res.json({ success: true, devCode: code });
 });
 
-app.post('/api/auth/verify-code', (req, res) => {
+app.post('/api/auth/verify-code', async (req, res) => {
   const { email, code } = req.body;
   const stored = pendingCodes.get(email?.toLowerCase());
   if (!stored || stored.code !== code) return res.status(400).json({ error: 'Código incorrecto' });
@@ -219,7 +269,15 @@ app.post('/api/auth/verify-code', (req, res) => {
   }
   pendingCodes.delete(email.toLowerCase());
   const token = crypto.randomBytes(32).toString('hex');
-  userTokens.set(token, { email: email.toLowerCase(), dailyCount: 0, lastReset: new Date().toDateString() });
+  const today = new Date().toDateString();
+  const { rows } = await db.query(
+    'INSERT INTO users (email) VALUES ($1) ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING id',
+    [email.toLowerCase()]
+  );
+  await db.query(
+    'INSERT INTO auth_tokens (token, user_id, daily_count, last_reset) VALUES ($1, $2, 0, $3)',
+    [token, rows[0].id, today]
+  );
   res.json({ success: true, token });
 });
 
@@ -228,8 +286,8 @@ app.post('/api/analyze/niche', async (req, res) => {
   try {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: 'Query requerida' });
-    const userData = getRegisteredUser(req);
-    if (userData && !checkDailyLimit(userData, res)) return;
+    const userData = await getRegisteredUser(req);
+    if (userData && !await checkDailyLimit(userData, res)) return;
     const isRegistered = !!userData;
 
     const searchData = await ytFetch(
@@ -269,6 +327,7 @@ app.post('/api/analyze/niche', async (req, res) => {
     const income = estimateIncome(avgViews, cpm);
 
     const limited = limitResults({ videos, stats: { avgViews, avgEngagement, avgSubs }, score, formatBreakdown, income }, isRegistered, 'niche');
+    if (userData) saveHistory(userData.user_id, 'niche', query, { score, income, stats: { avgViews, avgEngagement, avgSubs } });
     res.json({ data: limited });
   } catch (err) {
     console.error('analyzeNiche error:', err);
@@ -280,7 +339,7 @@ app.post('/api/analyze/niche', async (req, res) => {
 app.get('/api/trending', async (req, res) => {
   try {
     const { region = 'US', category = '0' } = req.query;
-    const userData = getRegisteredUser(req);
+    const userData = await getRegisteredUser(req);
     const isRegistered = !!userData;
     const catParam = category !== '0' ? `&videoCategoryId=${category}` : '';
 
@@ -305,8 +364,8 @@ app.post('/api/analyze/channel', async (req, res) => {
   try {
     const { input } = req.body;
     if (!input) return res.status(400).json({ error: 'Input requerido' });
-    const userData = getRegisteredUser(req);
-    if (userData && !checkDailyLimit(userData, res)) return;
+    const userData = await getRegisteredUser(req);
+    if (userData && !await checkDailyLimit(userData, res)) return;
     const isRegistered = !!userData;
 
     let channelId;
@@ -500,8 +559,8 @@ app.post('/api/keywords', async (req, res) => {
     );
 
     keywordData.sort((a, b) => b.score - a.score);
-    const userData2 = getRegisteredUser(req);
-    if (userData2 && !checkDailyLimit(userData2, res)) return;
+    const userData2 = await getRegisteredUser(req);
+    if (userData2 && !await checkDailyLimit(userData2, res)) return;
     const limited2 = limitResults({ keywords: keywordData }, !!userData2, 'keywords');
     res.json({ data: { ...limited2, parsedTopic: topic, lang, region } });
   } catch (err) {
@@ -515,9 +574,9 @@ app.post('/api/titles', async (req, res) => {
   try {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: 'Query requerida' });
-    const userData = getRegisteredUser(req);
+    const userData = await getRegisteredUser(req);
     if (!userData) return res.status(401).json({ error: 'Registrate gratis para usar el generador de títulos.' });
-    if (!checkDailyLimit(userData, res)) return;
+    if (!await checkDailyLimit(userData, res)) return;
     const searchData = await ytFetch(`/search?key=${YT_KEY}&q=${encodeURIComponent(query)}&type=video&order=viewCount&maxResults=8&part=snippet`);
     const topTitles = (searchData.items || []).map(v => v.snippet.title).slice(0, 5);
     res.json({ data: { titles: generateTitleFormulas(query), topTitles } });
@@ -531,8 +590,8 @@ app.post('/api/tags', async (req, res) => {
   try {
     const { query } = req.body;
     if (!query) return res.status(400).json({ error: 'Query requerida' });
-    const userData = getRegisteredUser(req);
-    if (userData && !checkDailyLimit(userData, res)) return;
+    const userData = await getRegisteredUser(req);
+    if (userData && !await checkDailyLimit(userData, res)) return;
     const r = await fetch(`https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`);
     const d = await r.json();
     const suggestions = (d[1] || []).slice(0, 10);
