@@ -33,6 +33,7 @@ async function init() {
   }
   renderHistory('niche-history', 'nicheHistory');
   renderHistory('kw-history', 'kwHistory');
+  renderFavorites();
   const { pendingModalStep } = await chrome.storage.local.get('pendingModalStep');
   if (pendingModalStep) openModal(pendingModalStep);
 }
@@ -174,6 +175,73 @@ function showModalMsg(step, text, type) {
   el.style.display = 'block';
 }
 
+// ── Favorites ─────────────────────────────────────────────
+async function getFavorites() {
+  const r = await chrome.storage.local.get('favorites');
+  return r.favorites || [];
+}
+
+async function toggleFavorite(query, score) {
+  const favs = await getFavorites();
+  const idx = favs.findIndex(f => f.query === query);
+  if (idx >= 0) { favs.splice(idx, 1); } else { favs.unshift({ query, score }); }
+  await chrome.storage.local.set({ favorites: favs.slice(0, 20) });
+  return idx < 0;
+}
+
+async function renderFavorites() {
+  const favs = await getFavorites();
+  const el = $('favorites-list');
+  if (!el) return;
+  if (!favs.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:12px 0"><p style="font-size:11px">No hay nichos guardados aún.<br>Guardá un análisis con el icono estrella.</p></div>';
+    return;
+  }
+  el.innerHTML = favs.map(f => `
+    <div class="fav-item">
+      <div class="fav-name">${f.query}</div>
+      <button class="fav-analyze" data-fav-query="${f.query.replace(/"/g,'&quot;')}">Analizar</button>
+      <button class="fav-delete" data-fav-del="${f.query.replace(/"/g,'&quot;')}">×</button>
+    </div>`).join('');
+}
+
+// ── Title Generator ───────────────────────────────────────
+$('title-btn').addEventListener('click', generateTitles);
+$('title-input').addEventListener('keydown', e => { if (e.key === 'Enter') generateTitles(); });
+
+async function generateTitles() {
+  const query = $('title-input').value.trim();
+  if (!query) return;
+  $('title-results').innerHTML = loadingHTML(`Generando títulos para "${query}"…`);
+  $('title-btn').disabled = true;
+  try {
+    const resp = await chrome.runtime.sendMessage({ action: 'generateTitles', query });
+    if (resp.error) throw new Error(resp.error);
+    renderTitleResults(resp.data);
+  } catch (err) {
+    $('title-results').innerHTML = errorHTML(err.message);
+  } finally {
+    $('title-btn').disabled = false;
+  }
+}
+
+function renderTitleResults(data) {
+  const { titles, topTitles } = data;
+  const titlesHTML = titles.map((t, i) => `
+    <div class="title-item">
+      <div class="title-text">${t}</div>
+      <button class="copy-btn" data-copy="${t.replace(/"/g,'&quot;')}">Copiar</button>
+    </div>`).join('');
+
+  const refHTML = topTitles?.length ? `
+    <div class="section-title" style="margin:14px 0 8px">Referencia — Top videos virales</div>
+    ${topTitles.map(t => `<div class="ref-title">${t}</div>`).join('')}` : '';
+
+  $('title-results').innerHTML = `
+    <div class="section-title" style="margin-bottom:8px">15 títulos optimizados</div>
+    ${titlesHTML}${refHTML}`;
+}
+
 // ── Niche Analyzer ────────────────────────────────────────
 $('niche-btn').addEventListener('click', analyzeNiche);
 $('niche-input').addEventListener('keydown', e => { if (e.key === 'Enter') analyzeNiche(); });
@@ -191,7 +259,7 @@ async function analyzeNiche() {
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'analyzeNiche', query });
     if (resp.error) throw new Error(resp.error);
-    renderNicheResults(query, resp.data);
+    await renderNicheResults(query, resp.data);
     await saveToHistory('nicheHistory', query);
     renderHistory('niche-history', 'nicheHistory');
   } catch (err) {
@@ -201,8 +269,8 @@ async function analyzeNiche() {
   }
 }
 
-function renderNicheResults(query, data) {
-  const { videos, stats, score } = data;
+async function renderNicheResults(query, data) {
+  const { videos, stats, score, income, formatBreakdown } = data;
   const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
   const scoreLabel = score >= 70 ? 'Alta Oportunidad' : score >= 40 ? 'Oportunidad Media' : 'Alta Competencia';
   const scoreDesc = score >= 70
@@ -212,6 +280,28 @@ function renderNicheResults(query, data) {
     : 'Nicho muy competitivo. Dominado por canales grandes.';
   const barColor = score >= 70 ? '#00C896' : score >= 40 ? '#F5A623' : '#FF5555';
 
+  const favs = await getFavorites();
+  const isSaved = favs.some(f => f.query === query);
+
+  const incomeHTML = income ? `
+    <div class="income-card">
+      <div class="income-row">
+        <div class="income-stat">
+          <span class="income-val">$${income.cpm} CPM</span>
+          <span class="income-label">CPM estimado</span>
+        </div>
+        <div class="income-stat">
+          <span class="income-val">$${fmtNum(income.min)}–$${fmtNum(income.max)}</span>
+          <span class="income-label">Ingresos/mes estimados</span>
+        </div>
+      </div>
+      ${formatBreakdown ? `<div class="format-row">
+        <div class="fmt-badge short">${formatBreakdown.short}%<span class="fmt-label">Shorts</span></div>
+        <div class="fmt-badge medium">${formatBreakdown.medium}%<span class="fmt-label">Medio</span></div>
+        <div class="fmt-badge long">${formatBreakdown.long}%<span class="fmt-label">Largo</span></div>
+      </div>` : ''}
+    </div>` : '';
+
   $('niche-results').innerHTML = `
     <div class="score-card ${scoreClass}">
       <div class="score-num">${score}</div>
@@ -220,7 +310,11 @@ function renderNicheResults(query, data) {
         <h3>${scoreLabel}</h3>
         <p>${scoreDesc}</p>
       </div>
+      <button class="fav-btn ${isSaved ? 'saved' : ''}" id="fav-btn" data-fav-query="${query.replace(/"/g,'&quot;')}" data-fav-score="${score}">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
     </div>
+    ${incomeHTML}
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value">${fmtNum(stats.avgViews)}</div>
@@ -351,6 +445,7 @@ async function searchKeywords() {
     renderKeywordResults(resp.data);
     await saveToHistory('kwHistory', query);
     renderHistory('kw-history', 'kwHistory');
+    loadTags(query);
   } catch (err) {
     $('kw-results').innerHTML = errorHTML(err.message);
   } finally {
@@ -398,7 +493,23 @@ function renderKeywordResults(data) {
     <div class="section-title" style="margin-bottom:10px">Keywords — click para analizar nicho</div>
     ${html}
     ${locked ? lockBannerHTML(lockedCount, 'keywords') : ''}
+    <div id="tags-section" style="margin-top:10px"></div>
   `;
+}
+
+async function loadTags(query) {
+  const el = $('tags-section');
+  if (!el) return;
+  el.innerHTML = `<div class="section-title" style="margin-bottom:6px">Tags para tu video</div><div class="loading" style="padding:8px 0"><div class="spinner" style="width:14px;height:14px;margin-bottom:5px"></div>Generando tags…</div>`;
+  try {
+    const resp = await chrome.runtime.sendMessage({ action: 'generateTags', query });
+    if (resp.error || !resp.data?.tags?.length) { el.innerHTML = ''; return; }
+    const allTags = resp.data.tags.join(', ');
+    el.innerHTML = `
+      <div class="section-title" style="margin-bottom:6px">Tags para tu video</div>
+      <div class="tags-wrap">${resp.data.tags.map(t => `<span class="tag-chip">${t}</span>`).join('')}</div>
+      <button class="copy-all-btn" data-copy="${allTags.replace(/"/g,'&quot;')}">Copiar todos los tags</button>`;
+  } catch { el.innerHTML = ''; }
 }
 
 // ── License ───────────────────────────────────────────────
@@ -449,6 +560,8 @@ function videoItemHTML(v, rank) {
   const engClass = v.engagementRate > 5 ? 'hot' : '';
   const scoreColor = v.viralScore >= 70 ? '#00C896' : v.viralScore >= 40 ? '#F5A623' : '#7A7A7A';
   const scoreBg = v.viralScore >= 70 ? 'rgba(0,200,150,0.1)' : v.viralScore >= 40 ? 'rgba(245,166,35,0.1)' : 'rgba(122,122,122,0.1)';
+  const fmtLabel = v.format === 'short' ? 'Short' : v.format === 'medium' ? 'Medio' : 'Largo';
+  const fmtClass = v.format || 'long';
   return `
     <div class="video-item">
       <div class="video-rank">#${rank}</div>
@@ -459,6 +572,7 @@ function videoItemHTML(v, rank) {
           <span class="meta-tag ${engClass}">${v.engagementRate}% eng</span>
           <span class="meta-tag">${v.channelName}</span>
           <span class="meta-tag">${fmtDate(v.publishedAt)}</span>
+          <span class="vid-format ${fmtClass}">${fmtLabel}</span>
         </div>
       </div>
       <div class="score-pill" style="background:${scoreBg};color:${scoreColor}">${v.viralScore}</div>
@@ -509,7 +623,7 @@ function fmtDate(str) {
 }
 
 // ── Event delegation ──────────────────────────────────────
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const histChip = e.target.closest('.history-chip');
   if (histChip) {
     const query = histChip.dataset.hist;
@@ -538,6 +652,50 @@ document.addEventListener('click', e => {
 
   if (e.target.classList.contains('js-upgrade')) {
     chrome.tabs.create({ url: 'https://tubescout.io/#pricing' });
+    return;
+  }
+
+  const copyBtn = e.target.closest('[data-copy]');
+  if (copyBtn) {
+    const text = copyBtn.dataset.copy;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = 'Copiado!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => { copyBtn.textContent = orig; copyBtn.classList.remove('copied'); }, 1500);
+    });
+    return;
+  }
+
+  const favBtn = e.target.closest('[data-fav-query]');
+  if (favBtn && favBtn.id === 'fav-btn') {
+    const query = favBtn.dataset.favQuery;
+    const score = parseInt(favBtn.dataset.favScore || 0);
+    const saved = await toggleFavorite(query, score);
+    favBtn.classList.toggle('saved', saved);
+    renderFavorites();
+    return;
+  }
+
+  const favAnalyze = e.target.closest('.fav-analyze');
+  if (favAnalyze) {
+    const query = favAnalyze.dataset.favQuery;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelector('[data-tab="niche"]').classList.add('active');
+    $('panel-niche').classList.add('active');
+    $('niche-input').value = query;
+    analyzeNiche();
+    return;
+  }
+
+  const favDel = e.target.closest('[data-fav-del]');
+  if (favDel) {
+    const query = favDel.dataset.favDel;
+    const favs = await getFavorites();
+    await chrome.storage.local.set({ favorites: favs.filter(f => f.query !== query) });
+    renderFavorites();
+    return;
   }
 });
 

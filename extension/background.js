@@ -18,6 +18,8 @@ async function handleMessage(msg) {
   switch (msg.action) {
     case 'analyzeNiche':    return analyzeNiche(msg.query);
     case 'searchKeywords':  return searchKeywords(msg.query);
+    case 'generateTitles':  return generateTitles(msg.query);
+    case 'generateTags':    return generateTags(msg.query);
     case 'requestCode':     return requestCode(msg.email);
     case 'verifyCode':      return verifyCode(msg.email, msg.code);
     case 'getTrending':     return getTrending(msg.region, msg.category);
@@ -60,6 +62,14 @@ async function searchKeywords(query) {
     method: 'POST',
     body: JSON.stringify({ query })
   });
+}
+
+async function generateTitles(query) {
+  return apiFetch('/api/titles', { method: 'POST', body: JSON.stringify({ query }) });
+}
+
+async function generateTags(query) {
+  return apiFetch('/api/tags', { method: 'POST', body: JSON.stringify({ query }) });
 }
 
 async function requestCode(email) {

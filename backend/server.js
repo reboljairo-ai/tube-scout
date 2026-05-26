@@ -8,6 +8,78 @@ const LS_KEY = process.env.LEMON_SQUEEZY_API_KEY;
 const RESEND_KEY = process.env.RESEND_API_KEY;
 const BASE = 'https://www.googleapis.com/youtube/v3';
 
+const CPM_MAP = [
+  { kw: 'insurance', cpm: 35 }, { kw: 'mortgage', cpm: 32 }, { kw: 'loan', cpm: 28 },
+  { kw: 'investing', cpm: 30 }, { kw: 'investment', cpm: 28 }, { kw: 'finance', cpm: 25 },
+  { kw: 'finanzas', cpm: 25 }, { kw: 'financial', cpm: 25 }, { kw: 'tax', cpm: 25 },
+  { kw: 'credit', cpm: 22 }, { kw: 'real estate', cpm: 28 }, { kw: 'business', cpm: 20 },
+  { kw: 'negocio', cpm: 18 }, { kw: 'entrepreneur', cpm: 18 }, { kw: 'marketing', cpm: 18 },
+  { kw: 'ecommerce', cpm: 20 }, { kw: 'crypto', cpm: 18 }, { kw: 'bitcoin', cpm: 18 },
+  { kw: 'medical', cpm: 18 }, { kw: 'salud', cpm: 12 }, { kw: 'software', cpm: 16 },
+  { kw: 'saas', cpm: 18 }, { kw: 'tech', cpm: 14 }, { kw: 'tecnologia', cpm: 12 },
+  { kw: 'car', cpm: 12 }, { kw: 'auto', cpm: 10 }, { kw: 'automotive', cpm: 12 },
+  { kw: 'mental health', cpm: 12 }, { kw: 'meditation', cpm: 10 }, { kw: 'meditacion', cpm: 9 },
+  { kw: 'productivity', cpm: 10 }, { kw: 'self help', cpm: 10 }, { kw: 'course', cpm: 10 },
+  { kw: 'coding', cpm: 10 }, { kw: 'programming', cpm: 10 }, { kw: 'programacion', cpm: 9 },
+  { kw: 'fitness', cpm: 8 }, { kw: 'workout', cpm: 7 }, { kw: 'gym', cpm: 7 },
+  { kw: 'nutrition', cpm: 9 }, { kw: 'diet', cpm: 8 }, { kw: 'yoga', cpm: 7 },
+  { kw: 'cooking', cpm: 6 }, { kw: 'cocina', cpm: 5 }, { kw: 'recipe', cpm: 5 },
+  { kw: 'travel', cpm: 8 }, { kw: 'viaje', cpm: 7 }, { kw: 'beauty', cpm: 7 },
+  { kw: 'makeup', cpm: 8 }, { kw: 'skincare', cpm: 9 }, { kw: 'fashion', cpm: 6 },
+  { kw: 'diy', cpm: 6 }, { kw: 'home', cpm: 7 }, { kw: 'garden', cpm: 6 },
+  { kw: 'pets', cpm: 5 }, { kw: 'education', cpm: 8 }, { kw: 'educacion', cpm: 7 },
+  { kw: 'gaming', cpm: 3 }, { kw: 'minecraft', cpm: 2 }, { kw: 'fortnite', cpm: 2 },
+  { kw: 'music', cpm: 3 }, { kw: 'musica', cpm: 3 }, { kw: 'comedy', cpm: 3 },
+  { kw: 'sports', cpm: 4 }, { kw: 'deporte', cpm: 4 }, { kw: 'kids', cpm: 2 },
+];
+
+function estimateCPM(query) {
+  const q = (query || '').toLowerCase();
+  let best = 4;
+  for (const { kw, cpm } of CPM_MAP) {
+    if (q.includes(kw) && cpm > best) best = cpm;
+  }
+  return best;
+}
+
+function estimateIncome(avgViews, cpm) {
+  const monthly = avgViews * 4;
+  return {
+    min: Math.round((monthly * 0.30 / 1000) * cpm),
+    max: Math.round((monthly * 0.55 / 1000) * cpm),
+    cpm
+  };
+}
+
+function getFormat(duration) {
+  const m = duration?.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return 'long';
+  const secs = (parseInt(m[1]||0)*3600) + (parseInt(m[2]||0)*60) + parseInt(m[3]||0);
+  return secs <= 61 ? 'short' : secs <= 480 ? 'medium' : 'long';
+}
+
+function generateTitleFormulas(query) {
+  const q = query.trim();
+  const Q = q.charAt(0).toUpperCase() + q.slice(1);
+  return [
+    `How to ${Q} (Step-by-Step for Beginners)`,
+    `I Tried ${Q} for 30 Days — Here's What Happened`,
+    `The Truth About ${Q} Nobody Tells You`,
+    `${Q}: Everything You Need to Know in 2025`,
+    `Why 90% of People Fail at ${Q} (And How to Succeed)`,
+    `7 Mistakes to Avoid When Starting ${Q}`,
+    `The Beginner's Complete Guide to ${Q}`,
+    `I Tested Every ${Q} Strategy So You Don't Have To`,
+    `What Experts Won't Tell You About ${Q}`,
+    `${Q} in 2025: Is It Still Worth It?`,
+    `How I Earned $X with ${Q} in 30 Days`,
+    `The ${Q} Blueprint That Changed Everything`,
+    `Stop Wasting Time on ${Q} — Do This Instead`,
+    `${Q} vs [Alternative]: Which Is Actually Better?`,
+    `I Spent $500 Testing ${Q} — Here Are My Results`,
+  ];
+}
+
 // ── In-memory auth stores ─────────────────────────────────
 const pendingCodes = new Map(); // email -> { code, expires }
 const userTokens = new Map();  // token -> { email, dailyCount, lastReset }
@@ -88,6 +160,7 @@ function mapVideo(v, channelMap = {}) {
   const comments = parseInt(v.statistics?.commentCount || 0);
   const subs = channelMap[v.snippet?.channelId] || 0;
   const engagementRate = views > 0 ? (((likes + comments) / views) * 100).toFixed(2) : '0.00';
+  const duration = v.contentDetails?.duration;
   return {
     videoId: v.id || v.id?.videoId,
     title: v.snippet?.title,
@@ -96,7 +169,8 @@ function mapVideo(v, channelMap = {}) {
     subscribers: subs,
     engagementRate: parseFloat(engagementRate),
     viralScore: calcViralScore(views, likes, comments),
-    publishedAt: v.snippet?.publishedAt
+    publishedAt: v.snippet?.publishedAt,
+    format: duration ? getFormat(duration) : 'long'
   };
 }
 
@@ -180,12 +254,21 @@ app.post('/api/analyze/niche', async (req, res) => {
     const avgEngagement = (videos.reduce((s, v) => s + v.engagementRate, 0) / videos.length).toFixed(2);
     const avgSubs = Math.round(videos.reduce((s, v) => s + v.subscribers, 0) / videos.length);
 
-    // Opportunity score: high engagement + lower competition = higher score
     const engScore = Math.min(100, parseFloat(avgEngagement) * 20);
     const diffScore = Math.min(100, Math.log10(Math.max(1, avgSubs)) * 15);
     const score = Math.round(engScore * 0.5 + (100 - diffScore) * 0.5);
 
-    const limited = limitResults({ videos, stats: { avgViews, avgEngagement, avgSubs }, score }, isRegistered, 'niche');
+    const fmts = videos.reduce((a, v) => { a[v.format] = (a[v.format]||0)+1; return a; }, {});
+    const t = videos.length || 1;
+    const formatBreakdown = {
+      short: Math.round((fmts.short||0)/t*100),
+      medium: Math.round((fmts.medium||0)/t*100),
+      long: Math.round((fmts.long||0)/t*100)
+    };
+    const cpm = estimateCPM(query);
+    const income = estimateIncome(avgViews, cpm);
+
+    const limited = limitResults({ videos, stats: { avgViews, avgEngagement, avgSubs }, score, formatBreakdown, income }, isRegistered, 'niche');
     res.json({ data: limited });
   } catch (err) {
     console.error('analyzeNiche error:', err);
@@ -424,6 +507,40 @@ app.post('/api/keywords', async (req, res) => {
   } catch (err) {
     console.error('keywords error:', err);
     res.status(500).json({ error: 'Error al buscar palabras clave.' });
+  }
+});
+
+// ── Title Generator ───────────────────────────────────────
+app.post('/api/titles', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: 'Query requerida' });
+    const userData = getRegisteredUser(req);
+    if (!userData) return res.status(401).json({ error: 'Registrate gratis para usar el generador de títulos.' });
+    if (!checkDailyLimit(userData, res)) return;
+    const searchData = await ytFetch(`/search?key=${YT_KEY}&q=${encodeURIComponent(query)}&type=video&order=viewCount&maxResults=8&part=snippet`);
+    const topTitles = (searchData.items || []).map(v => v.snippet.title).slice(0, 5);
+    res.json({ data: { titles: generateTitleFormulas(query), topTitles } });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar títulos.' });
+  }
+});
+
+// ── Tag Generator ─────────────────────────────────────────
+app.post('/api/tags', async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: 'Query requerida' });
+    const userData = getRegisteredUser(req);
+    if (userData && !checkDailyLimit(userData, res)) return;
+    const r = await fetch(`https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query)}`);
+    const d = await r.json();
+    const suggestions = (d[1] || []).slice(0, 10);
+    const base = query.toLowerCase().trim();
+    const tags = [...new Set([base, ...suggestions, `${base} 2025`, `${base} tutorial`, `${base} tips`, `${base} for beginners`, `how to ${base}`, `best ${base}`])].filter(Boolean).slice(0, 20);
+    res.json({ data: { tags } });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al generar tags.' });
   }
 });
 
