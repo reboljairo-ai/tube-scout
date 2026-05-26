@@ -603,6 +603,90 @@ app.post('/api/tags', async (req, res) => {
   }
 });
 
+// ── User Stats ────────────────────────────────────────────
+app.get('/api/user/stats', async (req, res) => {
+  try {
+    const userData = await getRegisteredUser(req);
+    if (!userData) return res.status(401).json({ error: 'No autenticado' });
+    const today = new Date().toDateString();
+    const todayCount = userData.last_reset === today ? userData.daily_count : 0;
+    const { rows: totalRows } = await db.query(
+      'SELECT COUNT(*) as total FROM search_history WHERE user_id = $1',
+      [userData.user_id]
+    );
+    res.json({
+      email: userData.email,
+      isPro: userData.is_pro,
+      todayCount,
+      totalSearches: parseInt(totalRows[0].total),
+      dailyLimit: userData.is_pro ? 'Ilimitado' : 10
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener estadísticas' });
+  }
+});
+
+// ── History ───────────────────────────────────────────────
+app.get('/api/history', async (req, res) => {
+  try {
+    const userData = await getRegisteredUser(req);
+    if (!userData) return res.status(401).json({ error: 'No autenticado' });
+    const limit = userData.is_pro ? 100 : 30;
+    const { rows } = await db.query(
+      'SELECT id, type, query, created_at FROM search_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
+      [userData.user_id, limit]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener historial' });
+  }
+});
+
+// ── Favorites CRUD ────────────────────────────────────────
+app.get('/api/favorites', async (req, res) => {
+  try {
+    const userData = await getRegisteredUser(req);
+    if (!userData) return res.status(401).json({ error: 'No autenticado' });
+    const { rows } = await db.query(
+      'SELECT id, query, score, created_at FROM favorites WHERE user_id = $1 ORDER BY created_at DESC',
+      [userData.user_id]
+    );
+    res.json({ data: rows });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al obtener favoritos' });
+  }
+});
+
+app.post('/api/favorites', async (req, res) => {
+  try {
+    const userData = await getRegisteredUser(req);
+    if (!userData) return res.status(401).json({ error: 'No autenticado' });
+    const { query, score } = req.body;
+    if (!query) return res.status(400).json({ error: 'Query requerida' });
+    await db.query(
+      'INSERT INTO favorites (user_id, query, score) VALUES ($1, $2, $3) ON CONFLICT (user_id, query) DO NOTHING',
+      [userData.user_id, query, score || null]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al guardar favorito' });
+  }
+});
+
+app.delete('/api/favorites/:id', async (req, res) => {
+  try {
+    const userData = await getRegisteredUser(req);
+    if (!userData) return res.status(401).json({ error: 'No autenticado' });
+    await db.query(
+      'DELETE FROM favorites WHERE id = $1 AND user_id = $2',
+      [req.params.id, userData.user_id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Error al eliminar favorito' });
+  }
+});
+
 // ── License Validation ────────────────────────────────────
 app.post('/api/license/validate', async (req, res) => {
   try {

@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TubeScout — YouTube Niche Research Tool</title>
-  <meta name="description" content="Find viral YouTube niches, analyze competitors, and discover content opportunities before anyone else. Free Chrome extension.">
+  <meta name="description" content="Analiza nichos de YouTube, descubre qué videos van viral y espía a tu competencia. Extensión gratuita para Chrome.">
   <meta property="og:title" content="TubeScout — YouTube Niche Research Tool">
-  <meta property="og:description" content="Analyze YouTube niches, viral patterns, and competitors in seconds. Built for content creators and marketers.">
+  <meta property="og:description" content="Analiza nichos de YouTube, descubre qué videos van viral y espía a tu competencia. Extensión gratuita para Chrome.">
   <meta property="og:type" content="website">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
@@ -27,7 +27,7 @@
     /* ── Nav ── */
     nav {
       position: sticky; top: 0; z-index: 100;
-      background: rgba(15,17,23,0.95);
+      background: rgba(15,17,23,0.96);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border-dark);
       padding: 0 24px;
@@ -38,7 +38,7 @@
     .nav-logo-icon { font-size: 22px; }
     .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text-dark); }
     .nav-right { display: flex; align-items: center; gap: 16px; }
-    .nav-link { font-size: 14px; color: var(--muted); text-decoration: none; }
+    .nav-link { font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
     .nav-link:hover { color: var(--text-dark); }
     .btn-nav {
       padding: 8px 18px; background: var(--accent); color: white;
@@ -46,6 +46,12 @@
       cursor: pointer; text-decoration: none; transition: background 0.15s;
     }
     .btn-nav:hover { background: var(--accent-dark); }
+    .btn-nav-ghost {
+      padding: 8px 16px; background: transparent; color: var(--muted);
+      border: 1px solid var(--border-dark); border-radius: 8px;
+      font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.15s;
+    }
+    .btn-nav-ghost:hover { border-color: var(--accent); color: var(--accent); }
 
     /* ── Hero ── */
     .hero {
@@ -57,8 +63,8 @@
     .hero::before {
       content: '';
       position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
-      width: 600px; height: 600px;
-      background: radial-gradient(circle, rgba(108,99,255,0.15) 0%, transparent 70%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(108,99,255,0.18) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero-badge {
@@ -71,7 +77,7 @@
       font-size: clamp(32px, 5vw, 56px);
       font-weight: 800; color: var(--text-dark);
       line-height: 1.15; margin-bottom: 20px;
-      max-width: 800px; margin-left: auto; margin-right: auto;
+      max-width: 820px; margin-left: auto; margin-right: auto;
     }
     .hero h1 span { color: var(--accent); }
     .hero p {
@@ -85,7 +91,7 @@
       cursor: pointer; text-decoration: none; transition: all 0.2s;
       display: inline-flex; align-items: center; gap: 8px;
     }
-    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.3); }
+    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
     .btn-secondary {
       padding: 14px 28px; background: transparent; color: var(--text-dark);
       border: 1px solid var(--border-dark); border-radius: 10px;
@@ -101,7 +107,7 @@
       border-top: 1px solid var(--border-dark);
       border-bottom: 1px solid var(--border-dark);
       padding: 20px 24px;
-      display: flex; justify-content: center; gap: 48px; flex-wrap: wrap;
+      display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
     }
     .trust-item { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .trust-item .ti-icon { font-size: 18px; }
@@ -124,12 +130,13 @@
     .feature-card {
       background: white; border: 1px solid #e2e8f0;
       border-radius: 16px; padding: 28px;
-      transition: box-shadow 0.2s;
+      transition: all 0.2s;
     }
-    .feature-card:hover { box-shadow: 0 8px 32px rgba(108,99,255,0.1); border-color: #c7d2fe; }
+    .feature-card:hover { box-shadow: 0 8px 32px rgba(108,99,255,0.1); border-color: #c7d2fe; transform: translateY(-2px); }
     .feature-icon { font-size: 32px; margin-bottom: 16px; }
     .feature-title { font-size: 17px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
     .feature-desc { font-size: 14px; color: #64748b; line-height: 1.7; }
+    .feature-badge { font-size: 11px; background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
 
     /* ── How it works ── */
     .steps { display: flex; gap: 24px; margin-top: 48px; flex-wrap: wrap; }
@@ -159,9 +166,7 @@
     .preview-mockup {
       background: var(--card-dark);
       border: 1px solid var(--border-dark);
-      border-radius: 20px;
-      padding: 20px;
-      font-family: -apple-system, sans-serif;
+      border-radius: 20px; padding: 20px;
     }
     .mock-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -174,7 +179,7 @@
     .mock-tab {
       flex: 1; text-align: center; padding: 7px 4px;
       background: transparent; border-radius: 8px;
-      font-size: 11px; color: var(--muted);
+      font-size: 10px; color: var(--muted);
     }
     .mock-tab.active { background: rgba(108,99,255,0.15); color: var(--accent); }
     .mock-search {
@@ -182,18 +187,26 @@
       border-radius: 8px; padding: 9px 12px; font-size: 12px;
       color: var(--muted); margin-bottom: 10px;
     }
+    .mock-income-card {
+      background: linear-gradient(135deg,rgba(74,222,128,0.1),rgba(108,99,255,0.1));
+      border: 1px solid rgba(74,222,128,0.2);
+      border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .mock-income-val { font-size: 15px; font-weight: 800; color: var(--green); }
+    .mock-income-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
     .mock-score-card {
       background: #0F1117; border: 1px solid var(--border-dark);
       border-radius: 10px; padding: 12px; margin-bottom: 8px;
       display: flex; align-items: center; gap: 12px;
     }
     .mock-ring {
-      width: 52px; height: 52px; border-radius: 50%;
+      width: 48px; height: 48px; border-radius: 50%;
       background: rgba(74,222,128,0.15); border: 2px solid var(--green);
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; font-weight: 800; color: var(--green);
+      font-size: 17px; font-weight: 800; color: var(--green);
     }
-    .mock-ring-label { font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+    .mock-ring-label { font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
     .mock-ring-sub { font-size: 10px; color: var(--muted); }
     .mock-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
     .mock-stat {
@@ -210,10 +223,14 @@
     .mock-rank { font-size: 10px; color: var(--muted); font-weight: 700; min-width: 14px; }
     .mock-vtitle { font-size: 11px; font-weight: 600; color: var(--text-dark); flex: 1; line-height: 1.4; }
     .mock-vscore { font-size: 12px; font-weight: 800; color: var(--green); }
+    .mock-fmt { font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 700; }
+    .mock-fmt.short { background: rgba(251,191,36,0.15); color: var(--yellow); }
+    .mock-fmt.long { background: rgba(108,99,255,0.15); color: #a5b4fc; }
 
     @media (max-width: 768px) {
       .preview-wrap { grid-template-columns: 1fr; }
       .preview-mockup { display: none; }
+      .nav-right .nav-link { display: none; }
     }
 
     /* ── Pricing ── */
@@ -285,6 +302,7 @@
     <a href="#features" class="nav-link">Funciones</a>
     <a href="#pricing" class="nav-link">Precios</a>
     <a href="#faq" class="nav-link">FAQ</a>
+    <a href="/dashboard.html" class="btn-nav-ghost">Mi Dashboard</a>
     <a href="#" class="btn-nav">Instalar gratis →</a>
   </div>
 </nav>
@@ -293,59 +311,69 @@
 <section class="hero">
   <div class="hero-badge">🎯 Extensión gratuita para Chrome</div>
   <h1>Descubre nichos de YouTube <span>antes que nadie</span></h1>
-  <p>Analiza qué videos van viral, espía a tus competidores y encuentra oportunidades de contenido con datos reales de YouTube.</p>
+  <p>Analiza qué videos van viral, espía a tu competencia y encuentra oportunidades de contenido con datos reales de YouTube.</p>
   <div class="hero-cta">
     <a href="#" class="btn-primary">🔗 Instalar en Chrome — Gratis</a>
-    <a href="#how" class="btn-secondary">Ver cómo funciona</a>
+    <a href="/dashboard.html" class="btn-secondary">Ver mi Dashboard</a>
   </div>
-  <p class="hero-note">No requiere tarjeta de crédito · 20 análisis gratis por día</p>
+  <p class="hero-note">No requiere tarjeta de crédito · 10 análisis gratis por día</p>
 </section>
 
 <!-- TRUST STRIP -->
 <div class="trust-strip">
   <div class="trust-item"><span class="ti-icon">🎯</span> Niche Opportunity Score</div>
-  <div class="trust-item"><span class="ti-icon">🔥</span> Trending en tiempo real</div>
+  <div class="trust-item"><span class="ti-icon">💰</span> Estimación de ingresos CPM</div>
+  <div class="trust-item"><span class="ti-icon">✏️</span> Generador de títulos virales</div>
   <div class="trust-item"><span class="ti-icon">📊</span> Análisis de canales</div>
-  <div class="trust-item"><span class="ti-icon">⚡</span> Overlay en YouTube</div>
-  <div class="trust-item"><span class="ti-icon">🆓</span> Plan gratuito incluido</div>
+  <div class="trust-item"><span class="ti-icon">🔥</span> Trending en tiempo real</div>
 </div>
 
 <!-- FEATURES -->
-<section class="features-bg">
+<section class="features-bg" id="features">
   <div class="section">
     <div class="section-label">Funciones</div>
     <h2 class="section-title">Todo lo que necesitas para dominar YouTube</h2>
-    <p class="section-sub">Tres herramientas en una extensión. Toma decisiones basadas en datos reales, no suposiciones.</p>
+    <p class="section-sub">8 herramientas en una extensión. Toma decisiones basadas en datos reales, no suposiciones.</p>
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">🔍</div>
         <div class="feature-title">Niche Analyzer</div>
-        <div class="feature-desc">Ingresa cualquier keyword y obtén al instante: Opportunity Score (0-100), engagement promedio del nicho, nivel de competencia y los 20 videos con más tráfico.</div>
+        <div class="feature-desc">Ingresa cualquier keyword y obtén al instante: Opportunity Score (0-100), engagement promedio, nivel de competencia y los 20 videos con más tráfico del nicho.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <div class="feature-title">Estimador de Ingresos</div>
+        <div class="feature-desc">Calcula el CPM estimado del nicho y proyecta el rango de ingresos mensuales que podrías ganar con un canal en ese mercado. Datos reales, no fantasías.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✏️</div>
+        <div class="feature-title">Generador de Títulos</div>
+        <div class="feature-desc">15 fórmulas de títulos probados y virales adaptadas automáticamente a tu nicho. Basado en los patrones que más views generan en YouTube.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏷️</div>
+        <div class="feature-title">Generador de Tags</div>
+        <div class="feature-desc">Genera hasta 20 tags relevantes para tu video usando el autocompletado de YouTube. Optimiza tu SEO con las palabras que la gente realmente busca.</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🔥</div>
         <div class="feature-title">Viral Tracker</div>
-        <div class="feature-desc">Ve qué está trending ahora mismo en YouTube por categoría y región. Analiza por qué se viralizaron: engagement rate, views por día, patrón de crecimiento.</div>
+        <div class="feature-desc">Ve qué está trending ahora mismo en YouTube por categoría y región. Analiza por qué se viralizaron: engagement rate, views por día, formato del video.</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📊</div>
         <div class="feature-title">Channel Spy</div>
-        <div class="feature-desc">Analiza cualquier canal competidor: frecuencia de publicación, views promedio, horarios, sus mejores videos y el engagement real de su audiencia.</div>
+        <div class="feature-desc">Analiza cualquier canal competidor: frecuencia de publicación, views promedio, sus mejores videos y el engagement real de su audiencia.</div>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <div class="feature-title">YouTube Overlay</div>
-        <div class="feature-desc">Mientras navegas YouTube, un botón "TubeScout" aparece en cada video. Un click y ves el Viral Score, engagement rate y métricas clave sin salir de la página.</div>
+        <div class="feature-icon">📐</div>
+        <div class="feature-title">Análisis de Formatos</div>
+        <div class="feature-desc">Descubre qué formato funciona mejor en tu nicho: Shorts, videos medios (hasta 8 min) o largos. Toma decisiones de formato con datos, no intuición.</div>
       </div>
       <div class="feature-card">
-        <div class="feature-icon">🎯</div>
-        <div class="feature-title">Opportunity Score</div>
-        <div class="feature-desc">Algoritmo propietario que combina demanda del nicho vs. nivel de competencia. Score verde = oportunidad real. Score rojo = mercado saturado, difícil entrar.</div>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📤</div>
-        <div class="feature-title">Exportación CSV <span style="font-size:11px;background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:6px">Pro</span></div>
-        <div class="feature-desc">Descarga cualquier análisis en CSV para trabajar los datos en Excel o Google Sheets. Ideal para agencias que gestionan múltiples canales de clientes.</div>
+        <div class="feature-icon">⭐</div>
+        <div class="feature-title">Favoritos <span class="feature-badge">Pro</span></div>
+        <div class="feature-desc">Guarda los nichos más prometedores en tu lista de favoritos. Vuelve a analizarlos en un click y accede a tu historial completo desde el dashboard web.</div>
       </div>
     </div>
   </div>
@@ -361,19 +389,19 @@
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-title">Instala la extensión</div>
-        <div class="step-desc">Un click en Chrome Web Store. No necesitas cuenta ni tarjeta de crédito para empezar.</div>
+        <div class="step-desc">Un click en Chrome Web Store. No necesitas cuenta ni tarjeta de crédito para empezar. Regístrate con tu email en la 4ta búsqueda.</div>
       </div>
       <div class="step-connector">→</div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-title">Busca tu nicho</div>
-        <div class="step-desc">Escribe cualquier keyword — "finanzas personales", "gaming PC", "recetas veganas" — y analiza.</div>
+        <div class="step-desc">Escribe cualquier keyword — "finanzas personales", "gaming PC", "recetas veganas" — y analiza el mercado en segundos.</div>
       </div>
       <div class="step-connector">→</div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-title">Actúa con datos</div>
-        <div class="step-desc">El Opportunity Score te dice si vale la pena entrar. Los datos de competidores te dicen cómo.</div>
+        <div class="step-desc">El Opportunity Score te dice si vale la pena entrar. El estimador de ingresos te dice cuánto puedes ganar. Los títulos generados te dicen cómo empezar.</div>
       </div>
     </div>
   </div>
@@ -386,7 +414,7 @@
       <div class="preview-text">
         <div class="section-label" style="color:#a5b4fc">La extensión</div>
         <h2 class="section-title">Diseñada para decisiones rápidas</h2>
-        <p class="section-sub">Interface minimalista y oscura. La información que necesitas, sin ruido.</p>
+        <p class="section-sub">Side panel minimalista y oscuro. La información que necesitas, sin ruido ni pestañas extra.</p>
         <ul class="preview-points">
           <li>
             <span class="pp-icon">🎯</span>
@@ -396,10 +424,17 @@
             </div>
           </li>
           <li>
-            <span class="pp-icon">📈</span>
+            <span class="pp-icon">💰</span>
             <div>
-              <strong>Top 20 videos con más tráfico</strong>
-              Con views, engagement rate y Viral Score para cada uno
+              <strong>Ingresos mensuales estimados</strong>
+              Proyección de cuánto podrías ganar con un canal en ese nicho
+            </div>
+          </li>
+          <li>
+            <span class="pp-icon">✏️</span>
+            <div>
+              <strong>15 títulos virales generados</strong>
+              Fórmulas probadas adaptadas automáticamente a tu keyword
             </div>
           </li>
           <li>
@@ -420,35 +455,52 @@
           <div class="mock-tab active">🔍 Nicho</div>
           <div class="mock-tab">🔥 Viral</div>
           <div class="mock-tab">📊 Canal</div>
-          <div class="mock-tab">⚙️ Cuenta</div>
+          <div class="mock-tab">✏️ Títulos</div>
+          <div class="mock-tab">⚙️</div>
         </div>
         <div class="mock-search">finanzas personales para jóvenes…</div>
         <div class="mock-score-card">
           <div class="mock-ring">78</div>
           <div>
             <div class="mock-ring-label">Alta Oportunidad</div>
-            <div class="mock-ring-sub">Buena demanda, competencia manejable</div>
+            <div class="mock-ring-sub">Buena demanda · Competencia manejable</div>
           </div>
+        </div>
+        <div class="mock-income-card">
+          <div>
+            <div class="mock-income-val">$420–$770/mes</div>
+            <div class="mock-income-lbl">Ingreso estimado · CPM $25</div>
+          </div>
+          <div style="font-size:10px;color:#a5b4fc;background:rgba(108,99,255,0.15);padding:4px 8px;border-radius:6px">💰 Finanzas</div>
         </div>
         <div class="mock-stats">
           <div class="mock-stat"><div class="mock-stat-val">284K</div><div class="mock-stat-lbl">Views prom.</div></div>
           <div class="mock-stat"><div class="mock-stat-val">4.2%</div><div class="mock-stat-lbl">Engagement</div></div>
-          <div class="mock-stat"><div class="mock-stat-val">89K</div><div class="mock-stat-lbl">Subs prom.</div></div>
+          <div class="mock-stat"><div class="mock-stat-val">62%</div><div class="mock-stat-lbl">Largos</div></div>
         </div>
         <div class="mock-video">
           <div class="mock-rank">#1</div>
-          <div class="mock-vtitle">Cómo invertir $100 al mes siendo joven en 2024</div>
-          <div class="mock-vscore">82</div>
+          <div class="mock-vtitle">Cómo invertir $100 al mes siendo joven</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <span class="mock-fmt long">Largo</span>
+            <div class="mock-vscore">82</div>
+          </div>
         </div>
         <div class="mock-video">
           <div class="mock-rank">#2</div>
-          <div class="mock-vtitle">Los 5 errores financieros que arruinan tu vida a los 20</div>
-          <div class="mock-vscore">74</div>
+          <div class="mock-vtitle">5 errores financieros a los 20 años</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <span class="mock-fmt short">Short</span>
+            <div class="mock-vscore">74</div>
+          </div>
         </div>
         <div class="mock-video">
           <div class="mock-rank">#3</div>
-          <div class="mock-vtitle">Regla del 50/30/20 — cómo aplicarla de verdad</div>
-          <div class="mock-vscore">61</div>
+          <div class="mock-vtitle">Regla 50/30/20 — cómo aplicarla de verdad</div>
+          <div style="display:flex;gap:4px;align-items:center">
+            <span class="mock-fmt long">Largo</span>
+            <div class="mock-vscore">61</div>
+          </div>
         </div>
       </div>
     </div>
@@ -467,13 +519,14 @@
         <div class="price-amount">$0</div>
         <div class="price-desc">Para creadores que quieren explorar oportunidades sin compromiso.</div>
         <ul class="price-features">
-          <li><span class="pf-check">✓</span> 20 análisis de nicho por día</li>
+          <li><span class="pf-check">✓</span> 10 análisis por día</li>
+          <li><span class="pf-check">✓</span> Niche Analyzer completo</li>
           <li><span class="pf-check">✓</span> Trending por categoría y región</li>
+          <li><span class="pf-check">✓</span> Estimador de ingresos CPM</li>
           <li><span class="pf-check">✓</span> Análisis básico de canales</li>
-          <li><span class="pf-check">✓</span> Overlay en YouTube</li>
           <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Análisis ilimitados</span></li>
+          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Historial completo en dashboard</span></li>
           <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Exportación CSV</span></li>
-          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Filtros avanzados</span></li>
         </ul>
         <a href="#" class="btn-price btn-price-free">Instalar gratis</a>
       </div>
@@ -484,11 +537,12 @@
         <div class="price-desc">Para creadores serios y agencias que necesitan datos sin límites.</div>
         <ul class="price-features">
           <li><span class="pf-check">✓</span> Análisis ilimitados</li>
-          <li><span class="pf-check">✓</span> Trending por categoría y región</li>
-          <li><span class="pf-check">✓</span> Análisis profundo de canales</li>
-          <li><span class="pf-check">✓</span> Overlay en YouTube</li>
+          <li><span class="pf-check">✓</span> Todas las funciones Free</li>
+          <li><span class="pf-check">✓</span> Generador de títulos ilimitado</li>
+          <li><span class="pf-check">✓</span> Generador de tags ilimitado</li>
+          <li><span class="pf-check">✓</span> Dashboard con historial completo</li>
+          <li><span class="pf-check">✓</span> Favoritos sincronizados</li>
           <li><span class="pf-check">✓</span> Exportación CSV</li>
-          <li><span class="pf-check">✓</span> Filtros avanzados por fecha y región</li>
           <li><span class="pf-check">✓</span> Soporte prioritario</li>
         </ul>
         <a href="#" class="btn-price btn-price-pro">Empezar Pro →</a>
@@ -506,19 +560,23 @@
     <div class="faq-list">
       <div class="faq-item">
         <div class="faq-q">¿Cómo se calculan los datos? ¿Son precisos?</div>
-        <div class="faq-a">TubeScout usa la API oficial de YouTube (YouTube Data API v3). Los datos de views, likes, comentarios y suscriptores son los mismos que muestra YouTube públicamente. El Viral Score y Opportunity Score son métricas propias calculadas sobre esos datos reales.</div>
+        <div class="faq-a">TubeScout usa la API oficial de YouTube (YouTube Data API v3). Los datos de views, likes, comentarios y suscriptores son los mismos que muestra YouTube públicamente. El Viral Score, Opportunity Score y el estimador de ingresos CPM son métricas propias calculadas sobre esos datos reales.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">¿Cuántos análisis incluye el plan Free?</div>
-        <div class="faq-a">El plan Free incluye 20 análisis de nicho o canal por día. Se resetean automáticamente a medianoche. Los videos trending se pueden ver sin límite.</div>
+        <div class="faq-a">El plan Free incluye 10 análisis por día (nicho + canal combinados). Se resetean automáticamente cada día. Los videos trending se pueden ver sin límite.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">¿Cómo funciona el Opportunity Score?</div>
-        <div class="faq-a">Combina dos factores: la demanda del nicho (basada en el engagement promedio de los top videos) y el nivel de competencia (basado en el tamaño promedio de los canales dominantes). Un score alto significa mucha demanda y competencia manejable.</div>
+        <div class="faq-q">¿Cómo se calcula el estimador de ingresos?</div>
+        <div class="faq-a">Se basa en el CPM promedio del nicho (ej: finanzas tiene CPM de $25, gaming tiene CPM de $3) y las views promedio de los videos del nicho. La proyección considera una monetización del 30-55%, que es el rango real en YouTube.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">¿Funciona para canales en español?</div>
-        <div class="faq-a">Sí. Puedes filtrar trending por región (ES, MX, AR, BR) y buscar nichos en cualquier idioma. TubeScout analiza YouTube globalmente.</div>
+        <div class="faq-a">Sí. Puedes filtrar trending por región (ES, MX, AR, BR) y buscar nichos en cualquier idioma. TubeScout analiza YouTube globalmente con datos reales de cada mercado.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">¿Qué es el Dashboard web?</div>
+        <div class="faq-a">Es un panel web donde puedes ver todo tu historial de análisis, tus nichos favoritos guardados y estadísticas de uso. Accesible desde cualquier dispositivo, no solo desde la extensión.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q">¿Puedo cancelar el plan Pro en cualquier momento?</div>
@@ -538,6 +596,7 @@
     <a href="#features">Funciones</a>
     <a href="#pricing">Precios</a>
     <a href="#faq">FAQ</a>
+    <a href="/dashboard.html">Dashboard</a>
     <a href="mailto:hello@tubescout.io">Soporte</a>
   </div>
   <p class="footer-copy">© 2026 TubeScout. No afiliado a YouTube ni a Google.</p>
