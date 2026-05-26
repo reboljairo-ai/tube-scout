@@ -3,10 +3,12 @@
   "name": "TubeScout — YouTube Niche Analyzer",
   "version": "1.0.0",
   "description": "Find viral YouTube niches, analyze competitors, and discover content opportunities before anyone else.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "sidePanel"],
   "host_permissions": ["https://www.youtube.com/*"],
+  "side_panel": {
+    "default_path": "popup.html"
+  },
   "action": {
-    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

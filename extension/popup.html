@@ -17,12 +17,18 @@
       --muted: #7A7A7A;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
     body {
-      width: 420px;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
     /* Header */
@@ -58,8 +64,9 @@
     .tab:hover:not(.active) { color: var(--text); }
 
     /* Panels */
-    .panel { display: none; padding: 14px 16px; max-height: 460px; overflow-y: auto; }
-    .panel.active { display: block; }
+    .panels { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .panel { display: none; padding: 14px 16px; flex: 1; overflow-y: auto; height: 0; }
+    .panel.active { display: flex; flex-direction: column; }
     .panel::-webkit-scrollbar { width: 3px; }
     .panel::-webkit-scrollbar-track { background: transparent; }
     .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -342,6 +349,7 @@
     </button>
   </div>
 
+  <div class="panels">
   <!-- NICHE TAB -->
   <div class="panel active" id="panel-niche">
     <div class="search-wrap">
@@ -438,6 +446,7 @@
       <button class="btn btn-primary" id="upgrade-btn" style="margin-bottom:0">Ver planes</button>
     </div>
   </div>
+  </div><!-- /panels -->
 
   <div class="footer">
     <a href="#" id="footer-home">tubescout.io</a>

@@ -6,6 +6,7 @@ chrome.runtime.onInstalled.addListener(() => {
     analysisCount: 0,
     reviewPromptCount: 0
   });
+  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
