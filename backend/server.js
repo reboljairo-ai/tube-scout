@@ -130,11 +130,9 @@ app.post('/api/auth/request-code', async (req, res) => {
         html: `<div style="font-family:sans-serif;max-width:420px;padding:32px;background:#0F1117;border-radius:12px"><h2 style="color:#6C63FF">🎯 TubeScout</h2><p style="color:#94A3B8;margin-bottom:20px">Tu código de verificación:</p><div style="font-size:36px;font-weight:800;letter-spacing:10px;color:#E2E8F0;padding:20px;background:#1A1D2E;border-radius:8px;text-align:center">${code}</div><p style="color:#64748b;font-size:13px;margin-top:16px">Expira en 15 minutos.</p></div>`
       })
     });
-    res.json({ success: true });
-  } else {
-    console.log(`[DEV] Code for ${email}: ${code}`);
-    res.json({ success: true, devCode: code });
   }
+  console.log(`[DEV] Code for ${email}: ${code}`);
+  res.json({ success: true, devCode: code });
 });
 
 app.post('/api/auth/verify-code', (req, res) => {
