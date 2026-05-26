@@ -113,6 +113,9 @@ $('send-code-btn')?.addEventListener('click', async () => {
   if (resp.success) {
     $('step-email').style.display = 'none';
     $('step-code').style.display = 'block';
+    if (resp.devCode) {
+      showModalMsg('code', `[DEV] Tu código: ${resp.devCode}`, 'success');
+    }
   } else {
     showModalMsg('email', resp.error || 'Error al enviar', 'error');
   }
