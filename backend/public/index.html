@@ -3,303 +3,338 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TubeScout — YouTube Niche Research Tool</title>
-  <meta name="description" content="Analiza nichos de YouTube, descubre qué videos van viral y espía a tu competencia. Extensión gratuita para Chrome.">
-  <meta property="og:title" content="TubeScout — YouTube Niche Research Tool">
-  <meta property="og:description" content="Analiza nichos de YouTube, descubre qué videos van viral y espía a tu competencia. Extensión gratuita para Chrome.">
-  <meta property="og:type" content="website">
+  <title>TubeScout — Domina YouTube con datos reales</title>
+  <meta name="description" content="Analiza nichos, descubre tendencias y genera títulos virales con datos reales de YouTube. Extensión gratuita para Chrome.">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent: #6C63FF;
-      --accent-dark: #5A52D5;
-      --bg-dark: #0F1117;
-      --card-dark: #1A1D2E;
-      --border-dark: #2D3148;
-      --text-dark: #E2E8F0;
-      --muted: #94A3B8;
-      --green: #4ADE80;
-      --yellow: #FBBF24;
+      --bg:      #080910;
+      --s1:      #0E1020;
+      --s2:      #141729;
+      --border:  rgba(255,255,255,0.07);
+      --accent:  #7C6FFF;
+      --pink:    #E879F9;
+      --cyan:    #22D3EE;
+      --green:   #34D399;
+      --amber:   #FBBF24;
+      --red:     #F87171;
+      --blue:    #60A5FA;
+      --text:    #EDF0FF;
+      --muted:   #5A6380;
+      --muted2:  #8892B0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a2e; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+    h1, h2, h3, .hero h1, .section-headline, .number-val, .price-amount, .step-num-wrap, .final-cta h2 { font-family: 'Syne', sans-serif; }
 
-    /* ── Nav ── */
+    /* ── UTILS ── */
+    .grad-text {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--pink) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .grad-text-2 {
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--accent) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    /* ── NAV ── */
     nav {
-      position: sticky; top: 0; z-index: 100;
-      background: rgba(15,17,23,0.96);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-dark);
-      padding: 0 24px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 64px; padding: 0 32px;
       display: flex; align-items: center; justify-content: space-between;
-      height: 60px;
+      background: rgba(8,9,16,0.75); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
     }
-    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-    .nav-logo-icon { display: flex; align-items: center; color: var(--accent); }
-    .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text-dark); }
-    .nav-right { display: flex; align-items: center; gap: 16px; }
-    .nav-link { font-size: 14px; color: var(--muted); text-decoration: none; transition: color 0.15s; }
-    .nav-link:hover { color: var(--text-dark); }
-    .btn-nav {
-      padding: 8px 18px; background: var(--accent); color: white;
-      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
-      cursor: pointer; text-decoration: none; transition: background 0.15s;
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon { color: var(--accent); display: flex; }
+    .nav-logo-text { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; font-family: 'Syne', sans-serif; }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { font-size: 14px; color: var(--muted2); text-decoration: none; transition: color 0.15s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+    .btn-ghost { padding: 8px 18px; background: transparent; color: var(--muted2); border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.15s; }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-cta {
+      padding: 9px 20px;
+      background: linear-gradient(135deg, var(--accent), #5A52D5);
+      color: white; border: none; border-radius: 10px;
+      font-size: 14px; font-weight: 700; text-decoration: none;
+      transition: all 0.2s; box-shadow: 0 4px 20px rgba(124,111,255,0.35);
     }
-    .btn-nav:hover { background: var(--accent-dark); }
-    .btn-nav-ghost {
-      padding: 8px 16px; background: transparent; color: var(--muted);
-      border: 1px solid var(--border-dark); border-radius: 8px;
-      font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.15s;
-    }
-    .btn-nav-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,111,255,0.5); }
 
-    /* ── Hero ── */
+    /* ── HERO ── */
     .hero {
-      background: linear-gradient(160deg, #0F1117 0%, #1a1240 60%, #0F1117 100%);
-      padding: 90px 24px 80px;
-      text-align: center;
-      position: relative; overflow: hidden;
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 100px 32px 80px; position: relative; overflow: hidden;
     }
+    /* Grid texture */
     .hero::before {
-      content: '';
-      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
-      width: 700px; height: 700px;
-      background: radial-gradient(circle, rgba(108,99,255,0.18) 0%, transparent 70%);
-      pointer-events: none;
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 64px 64px;
     }
+    /* Gradient blobs */
+    .hero-blob {
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0;
+    }
+    .blob-1 { width: 700px; height: 500px; background: rgba(124,111,255,0.22); top: -100px; left: -150px; animation: blobFloat 12s ease-in-out infinite; }
+    .blob-2 { width: 500px; height: 500px; background: rgba(232,121,249,0.12); bottom: -100px; right: -100px; animation: blobFloat 15s ease-in-out infinite reverse; }
+    .blob-3 { width: 400px; height: 400px; background: rgba(34,211,238,0.08); top: 50%; right: 25%; animation: blobFloat 10s ease-in-out infinite 3s; }
+    @keyframes blobFloat { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(30px,-20px) scale(1.04); } 66% { transform: translate(-20px,30px) scale(0.97); } }
+
+    .hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; position: relative; z-index: 1; }
     .hero-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(108,99,255,0.15); border: 1px solid rgba(108,99,255,0.3);
-      color: #a5b4fc; padding: 6px 14px; border-radius: 20px;
-      font-size: 13px; font-weight: 600; margin-bottom: 24px;
-    }
-    .hero h1 {
-      font-size: clamp(32px, 5vw, 56px);
-      font-weight: 800; color: var(--text-dark);
-      line-height: 1.15; margin-bottom: 20px;
-      max-width: 820px; margin-left: auto; margin-right: auto;
-    }
-    .hero h1 span { color: var(--accent); }
-    .hero p {
-      font-size: 18px; color: var(--muted);
-      max-width: 560px; margin: 0 auto 36px; line-height: 1.7;
-    }
-    .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-    .btn-primary {
-      padding: 14px 28px; background: var(--accent); color: white;
-      border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
-      cursor: pointer; text-decoration: none; transition: all 0.2s;
       display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(124,111,255,0.12); border: 1px solid rgba(124,111,255,0.3);
+      color: #a5b4fc; padding: 7px 16px; border-radius: 100px;
+      font-size: 13px; font-weight: 600; margin-bottom: 28px;
     }
-    .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
-    .btn-secondary {
-      padding: 14px 28px; background: transparent; color: var(--text-dark);
-      border: 1px solid var(--border-dark); border-radius: 10px;
-      font-size: 15px; font-weight: 600; text-decoration: none;
-      transition: all 0.15s;
+    .hero-badge-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+    .hero h1 {
+      font-size: clamp(38px, 4.5vw, 62px); font-weight: 900; line-height: 1.1;
+      letter-spacing: -0.03em; color: var(--text); margin-bottom: 22px;
     }
-    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-    .hero-note { font-size: 12px; color: var(--muted); margin-top: 16px; }
+    .hero-sub { font-size: 18px; color: var(--muted2); line-height: 1.7; margin-bottom: 36px; max-width: 480px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 44px; }
+    .btn-hero-primary {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--pink) 100%);
+      color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+      transition: all 0.2s; box-shadow: 0 6px 30px rgba(124,111,255,0.4);
+    }
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(124,111,255,0.55); }
+    .btn-hero-secondary {
+      padding: 15px 28px; background: var(--s2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 12px; font-size: 15px; font-weight: 600;
+      text-decoration: none; transition: all 0.15s;
+    }
+    .btn-hero-secondary:hover { border-color: rgba(255,255,255,0.2); background: var(--s1); }
+    .hero-social { display: flex; align-items: center; gap: 20px; }
+    .hero-stat { text-align: center; }
+    .hero-stat-val { font-size: 22px; font-weight: 800; color: var(--text); }
+    .hero-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .hero-divider { width: 1px; height: 36px; background: var(--border); }
 
-    /* ── Trust strip ── */
-    .trust-strip {
-      background: var(--card-dark);
-      border-top: 1px solid var(--border-dark);
-      border-bottom: 1px solid var(--border-dark);
-      padding: 20px 24px;
-      display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+    /* Hero right — floating card */
+    .hero-visual { position: relative; }
+    .hero-card-wrap { animation: cardFloat 8s ease-in-out infinite; }
+    @keyframes cardFloat { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-14px) rotate(0.5deg); } }
+    .hero-card {
+      background: var(--s1); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px; padding: 20px; width: 100%; max-width: 380px;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(124,111,255,0.15), 0 0 80px rgba(124,111,255,0.08);
+      margin: 0 auto;
     }
-    .trust-item { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; font-weight: 600; }
-    .trust-item .ti-icon { display: flex; align-items: center; }
+    .hc-header { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg,#1a1740,#141729); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; }
+    .hc-logo { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: var(--text); }
+    .hc-pro { background: linear-gradient(135deg,var(--accent),var(--pink)); color: white; font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 700; display:flex;align-items:center;gap:4px; }
+    .hc-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+    .hc-tab { flex: 1; text-align: center; padding: 8px 4px; border-radius: 9px; font-size: 10px; color: var(--muted); display:flex;align-items:center;justify-content:center;gap:3px; }
+    .hc-tab.on { background: rgba(124,111,255,0.15); color: var(--accent); font-weight: 700; }
+    .hc-input { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--muted2); margin-bottom: 12px; }
+    .hc-score { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .hc-ring { width: 52px; height: 52px; border-radius: 50%; background: rgba(52,211,153,0.12); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: var(--green); flex-shrink: 0; }
+    .hc-ring-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .hc-ring-sub { font-size: 11px; color: var(--muted2); }
+    .hc-income { background: linear-gradient(135deg,rgba(52,211,153,0.08),rgba(124,111,255,0.08)); border: 1px solid rgba(52,211,153,0.2); border-radius: 10px; padding: 11px 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .hc-income-val { font-size: 16px; font-weight: 800; color: var(--green); }
+    .hc-income-lbl { font-size: 10px; color: var(--muted2); margin-top: 2px; }
+    .hc-income-tag { font-size: 10px; color: #a5b4fc; background: rgba(124,111,255,0.15); padding: 4px 9px; border-radius: 7px; display:flex;align-items:center;gap:4px; }
+    .hc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-bottom: 10px; }
+    .hc-stat { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; text-align: center; }
+    .hc-stat-val { font-size: 13px; font-weight: 800; color: var(--text); }
+    .hc-stat-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; }
+    .hc-row { background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+    .hc-num { font-size: 10px; color: var(--muted); font-weight: 700; min-width: 16px; }
+    .hc-vtitle { font-size: 11px; font-weight: 600; color: var(--text); flex: 1; line-height: 1.35; }
+    .hc-vscore { font-size: 12px; font-weight: 800; color: var(--green); }
+    .hc-fmt { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+    .hc-fmt.s { background: rgba(251,191,36,0.15); color: var(--amber); }
+    .hc-fmt.l { background: rgba(124,111,255,0.15); color: #a5b4fc; }
+    /* Glow behind card */
+    .hero-glow { position: absolute; width: 320px; height: 320px; background: radial-gradient(circle, rgba(124,111,255,0.2) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: -1; }
 
-    /* ── Sections ── */
-    .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
-    .section-label {
-      font-size: 13px; font-weight: 700; color: var(--accent);
-      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
+    /* ── NUMBERS BAR ── */
+    .numbers-bar {
+      background: var(--s1); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 32px;
     }
-    .section-title { font-size: clamp(26px, 3vw, 38px); font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
-    .section-sub { font-size: 16px; color: #64748b; line-height: 1.7; max-width: 560px; }
+    .numbers-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+    .number-item { text-align: center; padding: 24px 16px; border-radius: 16px; background: var(--s2); border: 1px solid var(--border); transition: border-color 0.2s; }
+    .number-item:hover { border-color: rgba(124,111,255,0.3); }
+    .number-val { font-size: 36px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 6px; }
+    .number-lbl { font-size: 13px; color: var(--muted2); }
 
-    /* ── Features ── */
-    .features-bg { background: #f8faff; }
-    .features-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px; margin-top: 48px;
-    }
-    .feature-card {
-      background: white; border: 1px solid #e2e8f0;
-      border-radius: 16px; padding: 28px;
-      transition: all 0.2s;
-    }
-    .feature-card:hover { box-shadow: 0 8px 32px rgba(108,99,255,0.1); border-color: #c7d2fe; transform: translateY(-2px); }
-    .feature-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 18px; color: white;
-      flex-shrink: 0;
-    }
-    .feature-title { font-size: 17px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
-    .feature-desc { font-size: 14px; color: #64748b; line-height: 1.7; }
-    .feature-badge { font-size: 11px; background: #f3f4f6; color: #6b7280; padding: 2px 8px; border-radius: 10px; font-weight: 600; margin-left: 6px; vertical-align: middle; }
+    /* ── BENTO FEATURES ── */
+    .features-section { padding: 100px 32px; max-width: 1100px; margin: 0 auto; }
+    .section-eyebrow { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
+    .section-headline { font-size: clamp(30px, 3.5vw, 46px); font-weight: 900; letter-spacing: -0.03em; color: var(--text); margin-bottom: 16px; line-height: 1.15; }
+    .section-sub { font-size: 17px; color: var(--muted2); max-width: 560px; line-height: 1.7; margin-bottom: 56px; }
 
-    /* ── How it works ── */
-    .steps { display: flex; gap: 24px; margin-top: 48px; flex-wrap: wrap; }
-    .step { flex: 1; min-width: 220px; }
-    .step-num {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: var(--accent); color: white;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px; font-weight: 800; margin-bottom: 14px;
+    .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .bc {
+      background: var(--s1); border: 1px solid var(--border); border-radius: 20px;
+      padding: 28px; position: relative; overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
     }
-    .step-title { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
-    .step-desc { font-size: 14px; color: #64748b; line-height: 1.6; }
-    .step-connector { display: flex; align-items: flex-start; padding-top: 18px; color: #cbd5e1; font-size: 20px; }
+    .bc:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-2px); }
+    .bc.span2 { grid-column: span 2; }
+    .bc.span3 { grid-column: span 3; }
+    .bc-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; opacity: 0.7; }
+    .bc-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+    .bc-desc { font-size: 13px; color: var(--muted2); line-height: 1.65; }
+    .bc-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; color: white; }
+    /* Subtle glow top-right corner per card */
+    .bc::before { content: ''; position: absolute; top: -40px; right: -40px; width: 120px; height: 120px; border-radius: 50%; opacity: 0.15; filter: blur(30px); pointer-events: none; }
 
-    /* ── Extension preview ── */
-    .preview-bg { background: var(--bg-dark); }
-    .preview-wrap {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 48px; align-items: center; margin-top: 48px;
-    }
-    .preview-text .section-title { color: var(--text-dark); }
-    .preview-text .section-sub { color: var(--muted); }
-    .preview-points { list-style: none; margin-top: 24px; display: flex; flex-direction: column; gap: 14px; }
-    .preview-points li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; color: var(--muted); }
-    .preview-points li .pp-icon { display: flex; align-items: center; margin-top: 1px; color: var(--accent); flex-shrink: 0; }
-    .preview-points li strong { color: var(--text-dark); display: block; font-size: 14px; margin-bottom: 2px; }
-    .preview-mockup {
-      background: var(--card-dark);
-      border: 1px solid var(--border-dark);
-      border-radius: 20px; padding: 20px;
-    }
-    .mock-header {
-      display: flex; align-items: center; justify-content: space-between;
-      background: linear-gradient(135deg, #1E1B4B, #1A1D2E);
-      border-radius: 12px; padding: 12px 14px; margin-bottom: 12px;
-    }
-    .mock-logo { font-size: 14px; font-weight: 700; color: var(--text-dark); }
-    .mock-badge { background: var(--accent); color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 700; }
-    .mock-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
-    .mock-tab {
-      flex: 1; text-align: center; padding: 7px 4px;
-      background: transparent; border-radius: 8px;
-      font-size: 10px; color: var(--muted);
-    }
-    .mock-tab.active { background: rgba(108,99,255,0.15); color: var(--accent); }
-    .mock-search {
-      background: #0F1117; border: 1px solid var(--border-dark);
-      border-radius: 8px; padding: 9px 12px; font-size: 12px;
-      color: var(--muted); margin-bottom: 10px;
-    }
-    .mock-income-card {
-      background: linear-gradient(135deg,rgba(74,222,128,0.1),rgba(108,99,255,0.1));
-      border: 1px solid rgba(74,222,128,0.2);
-      border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .mock-income-val { font-size: 15px; font-weight: 800; color: var(--green); }
-    .mock-income-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
-    .mock-score-card {
-      background: #0F1117; border: 1px solid var(--border-dark);
-      border-radius: 10px; padding: 12px; margin-bottom: 8px;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .mock-ring {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: rgba(74,222,128,0.15); border: 2px solid var(--green);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px; font-weight: 800; color: var(--green);
-    }
-    .mock-ring-label { font-size: 12px; font-weight: 700; color: var(--text-dark); margin-bottom: 3px; }
-    .mock-ring-sub { font-size: 10px; color: var(--muted); }
-    .mock-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
-    .mock-stat {
-      background: #0F1117; border: 1px solid var(--border-dark);
-      border-radius: 6px; padding: 8px; text-align: center;
-    }
-    .mock-stat-val { font-size: 13px; font-weight: 700; color: var(--text-dark); }
-    .mock-stat-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; }
-    .mock-video {
-      background: #0F1117; border: 1px solid var(--border-dark);
-      border-radius: 8px; padding: 8px 10px; margin-bottom: 5px;
-      display: flex; gap: 8px; align-items: flex-start;
-    }
-    .mock-rank { font-size: 10px; color: var(--muted); font-weight: 700; min-width: 14px; }
-    .mock-vtitle { font-size: 11px; font-weight: 600; color: var(--text-dark); flex: 1; line-height: 1.4; }
-    .mock-vscore { font-size: 12px; font-weight: 800; color: var(--green); }
-    .mock-fmt { font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 700; }
-    .mock-fmt.short { background: rgba(251,191,36,0.15); color: var(--yellow); }
-    .mock-fmt.long { background: rgba(108,99,255,0.15); color: #a5b4fc; }
+    /* Bento mini UI components */
+    .mini-score-row { display: flex; align-items: center; gap: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; margin-top: 20px; }
+    .mini-ring { width: 44px; height: 44px; border-radius: 50%; background: rgba(52,211,153,0.1); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; color: var(--green); flex-shrink: 0; }
+    .mini-ring-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .mini-ring-sub { font-size: 10px; color: var(--muted2); }
+    .mini-bars { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .mini-bar-row { display: flex; align-items: center; gap: 8px; }
+    .mini-bar-label { font-size: 10px; color: var(--muted2); width: 70px; flex-shrink: 0; }
+    .mini-bar-track { flex: 1; height: 5px; background: var(--s2); border-radius: 3px; overflow: hidden; }
+    .mini-bar-fill { height: 100%; border-radius: 3px; }
+    .mini-bar-val { font-size: 10px; font-weight: 700; color: var(--text); width: 30px; text-align: right; flex-shrink: 0; }
 
-    @media (max-width: 768px) {
-      .preview-wrap { grid-template-columns: 1fr; }
-      .preview-mockup { display: none; }
-      .nav-right .nav-link { display: none; }
-    }
+    .mini-income { background: var(--bg); border: 1px solid rgba(52,211,153,0.25); border-radius: 12px; padding: 16px; margin-top: 20px; text-align: center; }
+    .mini-income-val { font-size: 28px; font-weight: 900; color: var(--green); letter-spacing: -0.02em; }
+    .mini-income-sub { font-size: 11px; color: var(--muted2); margin-top: 4px; }
+    .mini-cpm-row { display: flex; justify-content: center; gap: 16px; margin-top: 14px; }
+    .mini-cpm { background: var(--s2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; text-align: center; }
+    .mini-cpm-val { font-size: 14px; font-weight: 800; color: var(--text); }
+    .mini-cpm-lbl { font-size: 9px; color: var(--muted); margin-top: 2px; }
 
-    /* ── Pricing ── */
-    .pricing-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 24px; margin-top: 48px; max-width: 1040px; margin-left: auto; margin-right: auto;
-    }
-    .price-card.annual { border-color: var(--green); }
-    .annual-tag {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: var(--green); color: #052e16;
-      padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
-    }
-    .price-amount-cross { font-size: 16px; color: #9ca3af; text-decoration: line-through; margin-right: 6px; }
+    .mini-titles { margin-top: 18px; display: flex; flex-direction: column; gap: 7px; }
+    .mini-title-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 11px; color: var(--muted2); line-height: 1.4; }
+    .mini-title-item span { color: var(--accent); }
+
+    .mini-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+    .mini-tag { background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.2); color: var(--cyan); font-size: 11px; padding: 5px 10px; border-radius: 6px; font-weight: 600; }
+
+    .mini-trending { margin-top: 16px; display: flex; flex-direction: column; gap: 7px; }
+    .mini-trend-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
+    .mini-trend-title { font-size: 11px; color: var(--text); flex: 1; font-weight: 600; }
+    .mini-trend-views { font-size: 10px; color: var(--muted2); }
+    .mini-trend-badge { font-size: 9px; background: rgba(248,113,113,0.15); color: var(--red); padding: 3px 7px; border-radius: 4px; font-weight: 700; margin-left: 8px; }
+
+    .mini-formats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 20px; }
+    .mini-fmt { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 10px; text-align: center; }
+    .mini-fmt-val { font-size: 20px; font-weight: 900; margin-bottom: 4px; }
+    .mini-fmt-lbl { font-size: 10px; color: var(--muted2); }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { background: var(--s1); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 100px 32px; }
+    .how-inner { max-width: 1100px; margin: 0 auto; }
+    .how-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 0; margin-top: 56px; position: relative; }
+    .how-steps::before { content: ''; position: absolute; top: 28px; left: calc(16.66% + 16px); right: calc(16.66% + 16px); height: 1px; background: linear-gradient(90deg, var(--accent), var(--pink)); opacity: 0.3; }
+    .how-step { padding: 0 24px; text-align: center; }
+    .step-num-wrap { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--pink)); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; color: white; margin: 0 auto 20px; box-shadow: 0 6px 24px rgba(124,111,255,0.35); }
+    .step-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+    .step-desc { font-size: 14px; color: var(--muted2); line-height: 1.65; }
+
+    /* ── PRICING ── */
+    .pricing-section { padding: 100px 32px; position: relative; overflow: hidden; }
+    .pricing-section::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(ellipse, rgba(124,111,255,0.08) 0%, transparent 70%); pointer-events: none; }
+    .pricing-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 56px; }
     .price-card {
-      border: 1px solid #e2e8f0; border-radius: 20px; padding: 32px;
-      background: white; position: relative;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 24px; padding: 36px; position: relative;
+      transition: border-color 0.2s;
     }
-    .price-card.popular {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(108,99,255,0.1);
+    .price-card:hover { border-color: rgba(255,255,255,0.14); }
+    .price-card.featured {
+      background: linear-gradient(160deg, #1a1640 0%, #0f1020 100%);
+      border-color: rgba(124,111,255,0.5);
+      box-shadow: 0 0 0 1px rgba(124,111,255,0.2), 0 20px 60px rgba(124,111,255,0.15);
     }
-    .popular-tag {
-      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-      background: var(--accent); color: white;
-      padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
-    }
-    .price-plan { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-    .price-amount { font-size: 40px; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; }
-    .price-amount span { font-size: 16px; font-weight: 500; color: #64748b; }
-    .price-desc { font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.6; }
-    .price-features { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
-    .price-features li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #374151; }
-    .pf-check { color: var(--accent); font-weight: 700; }
-    .pf-x { color: #cbd5e1; }
-    .btn-price {
-      width: 100%; padding: 12px; border-radius: 10px;
-      font-size: 14px; font-weight: 700; cursor: pointer;
-      border: none; transition: all 0.15s; text-decoration: none; display: block; text-align: center;
-    }
-    .btn-price-free { background: #f1f5f9; color: #475569; }
-    .btn-price-free:hover { background: #e2e8f0; }
-    .btn-price-pro { background: var(--accent); color: white; }
-    .btn-price-pro:hover { background: var(--accent-dark); }
+    .price-card.annual { border-color: rgba(52,211,153,0.4); }
+    .price-card.annual:hover { border-color: rgba(52,211,153,0.6); }
+    .price-tag-featured { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent), var(--pink)); color: white; font-size: 12px; font-weight: 700; padding: 4px 16px; border-radius: 100px; white-space: nowrap; }
+    .price-tag-annual { position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--green); color: #022c22; font-size: 12px; font-weight: 700; padding: 4px 16px; border-radius: 100px; white-space: nowrap; }
+    .price-plan { font-size: 13px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .price-amount { font-size: 48px; font-weight: 900; color: var(--text); letter-spacing: -0.03em; line-height: 1; margin-bottom: 6px; }
+    .price-amount sup { font-size: 22px; vertical-align: top; margin-top: 8px; font-weight: 600; }
+    .price-amount sub { font-size: 15px; font-weight: 500; color: var(--muted2); }
+    .price-cross { font-size: 16px; color: var(--muted); text-decoration: line-through; margin-right: 8px; }
+    .price-desc { font-size: 14px; color: var(--muted2); margin: 16px 0 28px; line-height: 1.6; }
+    .price-btn { display: block; width: 100%; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 700; text-align: center; text-decoration: none; cursor: pointer; border: none; transition: all 0.15s; }
+    .price-btn-free { background: var(--s2); color: var(--text); border: 1px solid var(--border); }
+    .price-btn-free:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+    .price-btn-pro { background: linear-gradient(135deg, var(--accent), var(--pink)); color: white; box-shadow: 0 4px 20px rgba(124,111,255,0.4); }
+    .price-btn-pro:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,111,255,0.55); }
+    .price-btn-annual { background: var(--green); color: #022c22; box-shadow: 0 4px 20px rgba(52,211,153,0.3); }
+    .price-btn-annual:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(52,211,153,0.45); }
+    .price-feats { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-top: 24px; }
+    .price-feats li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--muted2); }
+    .pf-ok { color: var(--accent); font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+    .pf-ok.green { color: var(--green); }
+    .pf-no { color: var(--muted); flex-shrink: 0; margin-top: 1px; }
 
     /* ── FAQ ── */
-    .faq-list { margin-top: 40px; max-width: 720px; margin-left: auto; margin-right: auto; }
-    .faq-item { border-bottom: 1px solid #e2e8f0; padding: 20px 0; }
-    .faq-q { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
-    .faq-a { font-size: 14px; color: #64748b; line-height: 1.7; }
+    .faq-section { padding: 100px 32px; max-width: 760px; margin: 0 auto; }
+    .faq-list { margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
+    .faq-item { border-bottom: 1px solid var(--border); }
+    .faq-q { font-size: 16px; font-weight: 700; color: var(--text); padding: 22px 0; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; user-select: none; }
+    .faq-q:hover { color: var(--accent); }
+    .faq-icon { font-size: 20px; color: var(--muted); flex-shrink: 0; transition: transform 0.2s; }
+    .faq-a { font-size: 14px; color: var(--muted2); line-height: 1.75; padding-bottom: 20px; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); color: var(--accent); }
 
-    /* ── Footer ── */
-    footer {
-      background: var(--bg-dark);
-      border-top: 1px solid var(--border-dark);
-      padding: 40px 24px;
-      text-align: center;
+    /* ── FINAL CTA ── */
+    .final-cta {
+      margin: 0 32px 80px; border-radius: 28px; padding: 72px 48px;
+      background: linear-gradient(135deg, #1a1640 0%, #0f1020 60%, #130d24 100%);
+      border: 1px solid rgba(124,111,255,0.3);
+      text-align: center; position: relative; overflow: hidden;
     }
-    .footer-logo { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 16px; }
-    .footer-logo-text { font-size: 16px; font-weight: 700; color: var(--text-dark); }
-    .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
-    .footer-links a { font-size: 13px; color: var(--muted); text-decoration: none; }
+    .final-cta::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(124,111,255,0.15), transparent); pointer-events: none; }
+    .final-cta h2 { font-size: clamp(28px, 3vw, 44px); font-weight: 900; letter-spacing: -0.03em; color: var(--text); margin-bottom: 16px; position: relative; z-index: 1; }
+    .final-cta p { font-size: 16px; color: var(--muted2); margin-bottom: 36px; position: relative; z-index: 1; }
+    .final-cta .btn-hero-primary { position: relative; z-index: 1; display: inline-flex; }
+
+    /* ── FOOTER ── */
+    footer { border-top: 1px solid var(--border); padding: 48px 32px; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+    .footer-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .footer-logo-text { font-size: 15px; font-weight: 800; color: var(--text); }
+    .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
+    .footer-links a { font-size: 13px; color: var(--muted2); text-decoration: none; transition: color 0.15s; }
     .footer-links a:hover { color: var(--accent); }
-    .footer-copy { font-size: 12px; color: #4B5563; }
+    .footer-copy { font-size: 12px; color: var(--muted); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .bento { grid-template-columns: 1fr 1fr; }
+      .bc.span2, .bc.span3 { grid-column: span 2; }
+      .how-steps { grid-template-columns: 1fr; gap: 32px; }
+      .how-steps::before { display: none; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin-left: auto; margin-right: auto; }
+      .numbers-inner { grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 600px) {
+      nav { padding: 0 20px; }
+      .nav-links { display: none; }
+      .hero { padding: 90px 20px 60px; }
+      .bento { grid-template-columns: 1fr; }
+      .bc.span2, .bc.span3 { grid-column: span 1; }
+      .final-cta { margin: 0 16px 60px; padding: 48px 24px; }
+    }
   </style>
 </head>
 <body>
@@ -310,345 +345,433 @@
     <span class="nav-logo-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
     <span class="nav-logo-text">TubeScout</span>
   </a>
-  <div class="nav-right">
-    <a href="#features" class="nav-link">Funciones</a>
-    <a href="#pricing" class="nav-link">Precios</a>
-    <a href="#faq" class="nav-link">FAQ</a>
-    <a href="/dashboard.html" class="btn-nav-ghost">Mi Dashboard</a>
-    <a href="#" class="btn-nav">Instalar gratis →</a>
+  <div class="nav-links">
+    <a href="#features">Funciones</a>
+    <a href="#pricing">Precios</a>
+    <a href="#faq">FAQ</a>
+  </div>
+  <div class="nav-actions">
+    <a href="/dashboard.html" class="btn-ghost">Mi Dashboard</a>
+    <a href="#" class="btn-cta">Instalar gratis</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg> Extensión gratuita para Chrome</div>
-  <h1>Descubre nichos de YouTube <span>antes que nadie</span></h1>
-  <p>Analiza qué videos van viral, espía a tu competencia y encuentra oportunidades de contenido con datos reales de YouTube.</p>
-  <div class="hero-cta">
-    <a href="#" class="btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Instalar en Chrome — Gratis</a>
-    <a href="/dashboard.html" class="btn-secondary">Ver mi Dashboard</a>
+  <div class="hero-blob blob-1"></div>
+  <div class="hero-blob blob-2"></div>
+  <div class="hero-blob blob-3"></div>
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Extensión gratuita para Chrome
+      </div>
+      <h1>Domina YouTube con <span class="grad-text">datos reales</span></h1>
+      <p class="hero-sub">Descubre nichos rentables, genera títulos virales y espía a tu competencia — todo desde un panel lateral que no te saca de YouTube.</p>
+      <div class="hero-btns">
+        <a href="#" class="btn-hero-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Instalar en Chrome — Gratis
+        </a>
+        <a href="/dashboard.html" class="btn-hero-secondary">Ver mi Dashboard →</a>
+      </div>
+      <div class="hero-social">
+        <div class="hero-stat">
+          <div class="hero-stat-val grad-text">10K+</div>
+          <div class="hero-stat-lbl">Análisis realizados</div>
+        </div>
+        <div class="hero-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val grad-text-2">Free</div>
+          <div class="hero-stat-lbl">10 análisis/día</div>
+        </div>
+        <div class="hero-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val" style="color:var(--amber)">8+</div>
+          <div class="hero-stat-lbl">Herramientas</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-glow"></div>
+      <div class="hero-card-wrap">
+        <div class="hero-card">
+          <div class="hc-header">
+            <div class="hc-logo">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+              TubeScout
+            </div>
+            <div class="hc-pro">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Pro
+            </div>
+          </div>
+          <div class="hc-tabs">
+            <div class="hc-tab on"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Nicho</div>
+            <div class="hc-tab"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Viral</div>
+            <div class="hc-tab"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Canal</div>
+            <div class="hc-tab"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Títulos</div>
+          </div>
+          <div class="hc-input">finanzas personales para jóvenes…</div>
+          <div class="hc-score">
+            <div class="hc-ring">78</div>
+            <div>
+              <div class="hc-ring-title">Alta Oportunidad</div>
+              <div class="hc-ring-sub">Buena demanda · Competencia manejable</div>
+            </div>
+          </div>
+          <div class="hc-income">
+            <div>
+              <div class="hc-income-val">$420–$770/mes</div>
+              <div class="hc-income-lbl">Ingreso estimado · CPM $25</div>
+            </div>
+            <div class="hc-income-tag">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Finanzas
+            </div>
+          </div>
+          <div class="hc-grid">
+            <div class="hc-stat"><div class="hc-stat-val">284K</div><div class="hc-stat-lbl">Views prom.</div></div>
+            <div class="hc-stat"><div class="hc-stat-val">4.2%</div><div class="hc-stat-lbl">Engagement</div></div>
+            <div class="hc-stat"><div class="hc-stat-val">62%</div><div class="hc-stat-lbl">Largos</div></div>
+          </div>
+          <div class="hc-row">
+            <div class="hc-num">#1</div>
+            <div class="hc-vtitle">Cómo invertir $100 al mes siendo joven</div>
+            <span class="hc-fmt l">Largo</span>
+            <div class="hc-vscore">82</div>
+          </div>
+          <div class="hc-row">
+            <div class="hc-num">#2</div>
+            <div class="hc-vtitle">5 errores financieros a los 20 años</div>
+            <span class="hc-fmt s">Short</span>
+            <div class="hc-vscore">74</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <p class="hero-note">No requiere tarjeta de crédito · 10 análisis gratis por día</p>
 </section>
 
-<!-- TRUST STRIP -->
-<div class="trust-strip">
-  <div class="trust-item"><span class="ti-icon" style="color:#6C63FF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span> Niche Opportunity Score</div>
-  <div class="trust-item"><span class="ti-icon" style="color:#10B981"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Estimación de ingresos CPM</div>
-  <div class="trust-item"><span class="ti-icon" style="color:#F59E0B"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span> Generador de títulos virales</div>
-  <div class="trust-item"><span class="ti-icon" style="color:#3B82F6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span> Análisis de canales</div>
-  <div class="trust-item"><span class="ti-icon" style="color:#EF4444"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span> Trending en tiempo real</div>
+<!-- NUMBERS -->
+<div class="numbers-bar">
+  <div class="numbers-inner">
+    <div class="number-item">
+      <div class="number-val grad-text">10K+</div>
+      <div class="number-lbl">Análisis realizados</div>
+    </div>
+    <div class="number-item">
+      <div class="number-val grad-text-2">8</div>
+      <div class="number-lbl">Herramientas integradas</div>
+    </div>
+    <div class="number-item">
+      <div class="number-val" style="color:var(--amber)">100%</div>
+      <div class="number-lbl">Datos reales de YouTube</div>
+    </div>
+    <div class="number-item">
+      <div class="number-val" style="color:var(--green)">$0</div>
+      <div class="number-lbl">Para empezar hoy</div>
+    </div>
+  </div>
 </div>
 
-<!-- FEATURES -->
-<section class="features-bg" id="features">
-  <div class="section">
-    <div class="section-label">Funciones</div>
-    <h2 class="section-title">Todo lo que necesitas para dominar YouTube</h2>
-    <p class="section-sub">8 herramientas en una extensión. Toma decisiones basadas en datos reales, no suposiciones.</p>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#6C63FF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-        <div class="feature-title">Niche Analyzer</div>
-        <div class="feature-desc">Ingresa cualquier keyword y obtén al instante: Opportunity Score (0-100), engagement promedio, nivel de competencia y los 20 videos con más tráfico del nicho.</div>
+<!-- FEATURES BENTO -->
+<section id="features">
+  <div class="features-section">
+    <div class="section-eyebrow">Funciones</div>
+    <h2 class="section-headline">8 herramientas.<br><span class="grad-text">Una sola extensión.</span></h2>
+    <p class="section-sub">Desde encontrar el nicho hasta generar el título — todo sin salir de YouTube.</p>
+
+    <div class="bento">
+
+      <!-- Niche Analyzer — grande -->
+      <div class="bc span2" style="--glow:#7C6FFF">
+        <div class="bc::before" style="background:var(--accent)"></div>
+        <div class="bc-icon" style="background:#6C63FF">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="bc-eyebrow" style="color:#a5b4fc">Niche Analyzer</div>
+        <div class="bc-title">Opportunity Score en segundos</div>
+        <div class="bc-desc">Ingresa cualquier keyword y obtén al instante un score de 0 a 100, engagement del nicho, nivel de competencia y los top 20 videos con más tráfico.</div>
+        <div class="mini-score-row">
+          <div class="mini-ring">78</div>
+          <div>
+            <div class="mini-ring-title">Alta Oportunidad — finanzas personales</div>
+            <div class="mini-ring-sub">Demanda alta · Competencia media · CPM $25</div>
+          </div>
+        </div>
+        <div class="mini-bars">
+          <div class="mini-bar-row"><div class="mini-bar-label">Demanda</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:82%;background:var(--green)"></div></div><div class="mini-bar-val" style="color:var(--green)">82%</div></div>
+          <div class="mini-bar-row"><div class="mini-bar-label">Competencia</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:44%;background:var(--amber)"></div></div><div class="mini-bar-val" style="color:var(--amber)">44%</div></div>
+          <div class="mini-bar-row"><div class="mini-bar-label">Engagement</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:67%;background:var(--accent)"></div></div><div class="mini-bar-val" style="color:var(--accent)">67%</div></div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#10B981"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-        <div class="feature-title">Estimador de Ingresos</div>
-        <div class="feature-desc">Calcula el CPM estimado del nicho y proyecta el rango de ingresos mensuales que podrías ganar con un canal en ese mercado. Datos reales, no fantasías.</div>
+
+      <!-- Income Estimator -->
+      <div class="bc" style="background:linear-gradient(160deg,#0d1f18,#0e1020)">
+        <div class="bc-icon" style="background:#10B981">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="bc-eyebrow" style="color:var(--green)">Estimador CPM</div>
+        <div class="bc-title">¿Cuánto puedes ganar?</div>
+        <div class="bc-desc">CPM real por nicho. Proyección de ingresos mensual basada en views promedio.</div>
+        <div class="mini-income">
+          <div class="mini-income-val">$420 – $770</div>
+          <div class="mini-income-sub">Ingreso mensual estimado</div>
+          <div class="mini-cpm-row">
+            <div class="mini-cpm"><div class="mini-cpm-val" style="color:var(--green)">$25</div><div class="mini-cpm-lbl">CPM est.</div></div>
+            <div class="mini-cpm"><div class="mini-cpm-val">284K</div><div class="mini-cpm-lbl">Views prom.</div></div>
+          </div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#F59E0B"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
-        <div class="feature-title">Generador de Títulos</div>
-        <div class="feature-desc">15 fórmulas de títulos probados y virales adaptadas automáticamente a tu nicho. Basado en los patrones que más views generan en YouTube.</div>
+
+      <!-- Title Generator -->
+      <div class="bc">
+        <div class="bc-icon" style="background:#F59E0B">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <div class="bc-eyebrow" style="color:var(--amber)">Generador de Títulos</div>
+        <div class="bc-title">15 fórmulas virales</div>
+        <div class="bc-desc">Templates probados adaptados a tu keyword.</div>
+        <div class="mini-titles">
+          <div class="mini-title-item">How to <span>[finanzas]</span> (Step-by-Step)</div>
+          <div class="mini-title-item">The Truth About <span>[finanzas]</span> Nobody Tells You</div>
+          <div class="mini-title-item">I Tried <span>[finanzas]</span> for 30 Days…</div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#06B6D4"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
-        <div class="feature-title">Generador de Tags</div>
-        <div class="feature-desc">Genera hasta 20 tags relevantes para tu video usando el autocompletado de YouTube. Optimiza tu SEO con las palabras que la gente realmente busca.</div>
+
+      <!-- Tags Generator -->
+      <div class="bc">
+        <div class="bc-icon" style="background:#06B6D4">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        </div>
+        <div class="bc-eyebrow" style="color:var(--cyan)">Generador de Tags</div>
+        <div class="bc-title">SEO en un click</div>
+        <div class="bc-desc">Hasta 20 tags del autocompletado de YouTube.</div>
+        <div class="mini-tags">
+          <span class="mini-tag">finanzas personales</span>
+          <span class="mini-tag">invertir dinero</span>
+          <span class="mini-tag">ahorro 2025</span>
+          <span class="mini-tag">cómo ahorrar</span>
+          <span class="mini-tag">dinero jóvenes</span>
+          <span class="mini-tag">finanzas tips</span>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#EF4444"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
-        <div class="feature-title">Viral Tracker</div>
-        <div class="feature-desc">Ve qué está trending ahora mismo en YouTube por categoría y región. Analiza por qué se viralizaron: engagement rate, views por día, formato del video.</div>
+
+      <!-- Viral Tracker -->
+      <div class="bc">
+        <div class="bc-icon" style="background:#EF4444">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        </div>
+        <div class="bc-eyebrow" style="color:var(--red)">Viral Tracker</div>
+        <div class="bc-title">Trending ahora</div>
+        <div class="bc-desc">Lo que explota en YouTube por región y categoría en tiempo real.</div>
+        <div class="mini-trending">
+          <div class="mini-trend-item"><div class="mini-trend-title">Cómo invertir sin experiencia</div><div class="mini-trend-views">1.2M</div><div class="mini-trend-badge">↑ HOT</div></div>
+          <div class="mini-trend-item"><div class="mini-trend-title">El error que arruina tus finanzas</div><div class="mini-trend-views">840K</div><div class="mini-trend-badge">↑ HOT</div></div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#3B82F6"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-        <div class="feature-title">Channel Spy</div>
-        <div class="feature-desc">Analiza cualquier canal competidor: frecuencia de publicación, views promedio, sus mejores videos y el engagement real de su audiencia.</div>
+
+      <!-- Channel Spy + Format Analysis — fila final -->
+      <div class="bc">
+        <div class="bc-icon" style="background:#3B82F6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <div class="bc-eyebrow" style="color:var(--blue)">Channel Spy</div>
+        <div class="bc-title">Espía a tu competencia</div>
+        <div class="bc-desc">Views promedio, frecuencia de publicación, mejores videos y engagement real de cualquier canal.</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#8B5CF6"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
-        <div class="feature-title">Análisis de Formatos</div>
-        <div class="feature-desc">Descubre qué formato funciona mejor en tu nicho: Shorts, videos medios (hasta 8 min) o largos. Toma decisiones de formato con datos, no intuición.</div>
+
+      <div class="bc span2">
+        <div class="bc-icon" style="background:#8B5CF6">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </div>
+        <div class="bc-eyebrow" style="color:#c4b5fd">Análisis de Formatos</div>
+        <div class="bc-title">¿Shorts, medianos o largos? Los datos te responden.</div>
+        <div class="bc-desc">Descubre qué formato domina tu nicho para no perder tiempo creando contenido que nadie ve.</div>
+        <div class="mini-formats">
+          <div class="mini-fmt"><div class="mini-fmt-val" style="color:var(--amber)">28%</div><div class="mini-fmt-lbl">Shorts</div></div>
+          <div class="mini-fmt"><div class="mini-fmt-val" style="color:var(--cyan)">10%</div><div class="mini-fmt-lbl">Medianos</div></div>
+          <div class="mini-fmt"><div class="mini-fmt-val" style="color:var(--accent)">62%</div><div class="mini-fmt-lbl">Largos</div></div>
+        </div>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:#F97316"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-        <div class="feature-title">Favoritos <span class="feature-badge">Pro</span></div>
-        <div class="feature-desc">Guarda los nichos más prometedores en tu lista de favoritos. Vuelve a analizarlos en un click y accede a tu historial completo desde el dashboard web.</div>
-      </div>
+
     </div>
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section id="how">
-  <div class="section">
-    <div class="section-label">Cómo funciona</div>
-    <h2 class="section-title">En 3 pasos, datos reales</h2>
-    <p class="section-sub">Sin configuraciones complicadas. Instala y empieza a analizar en menos de 2 minutos.</p>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
+<section id="how" class="how-section">
+  <div class="how-inner">
+    <div class="section-eyebrow" style="text-align:center">Cómo funciona</div>
+    <h2 class="section-headline" style="text-align:center;max-width:600px;margin:0 auto">De cero a datos reales<br><span class="grad-text">en 2 minutos</span></h2>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="step-num-wrap">1</div>
         <div class="step-title">Instala la extensión</div>
-        <div class="step-desc">Un click en Chrome Web Store. No necesitas cuenta ni tarjeta de crédito para empezar. Regístrate con tu email en la 4ta búsqueda.</div>
+        <div class="step-desc">Un click en Chrome Web Store. Sin cuenta, sin tarjeta. Empieza a analizar gratis en menos de un minuto.</div>
       </div>
-      <div class="step-connector">→</div>
-      <div class="step">
-        <div class="step-num">2</div>
+      <div class="how-step">
+        <div class="step-num-wrap">2</div>
         <div class="step-title">Busca tu nicho</div>
-        <div class="step-desc">Escribe cualquier keyword — "finanzas personales", "gaming PC", "recetas veganas" — y analiza el mercado en segundos.</div>
+        <div class="step-desc">Escribe cualquier keyword — "finanzas personales", "gaming setup", "recetas veganas" — y obtén datos reales al instante.</div>
       </div>
-      <div class="step-connector">→</div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-title">Actúa con datos</div>
-        <div class="step-desc">El Opportunity Score te dice si vale la pena entrar. El estimador de ingresos te dice cuánto puedes ganar. Los títulos generados te dicen cómo empezar.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- EXTENSION PREVIEW -->
-<section class="preview-bg">
-  <div class="section">
-    <div class="preview-wrap">
-      <div class="preview-text">
-        <div class="section-label" style="color:#a5b4fc">La extensión</div>
-        <h2 class="section-title">Diseñada para decisiones rápidas</h2>
-        <p class="section-sub">Side panel minimalista y oscuro. La información que necesitas, sin ruido ni pestañas extra.</p>
-        <ul class="preview-points">
-          <li>
-            <span class="pp-icon" style="color:#6C63FF"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
-            <div>
-              <strong>Opportunity Score en segundos</strong>
-              Número del 0 al 100 que resume si vale la pena entrar al nicho
-            </div>
-          </li>
-          <li>
-            <span class="pp-icon" style="color:#10B981"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-            <div>
-              <strong>Ingresos mensuales estimados</strong>
-              Proyección de cuánto podrías ganar con un canal en ese nicho
-            </div>
-          </li>
-          <li>
-            <span class="pp-icon" style="color:#F59E0B"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
-            <div>
-              <strong>15 títulos virales generados</strong>
-              Fórmulas probadas adaptadas automáticamente a tu keyword
-            </div>
-          </li>
-          <li>
-            <span class="pp-icon" style="color:#06B6D4"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
-            <div>
-              <strong>Trending por región</strong>
-              US, España, México, Argentina y Brasil — elige tu mercado
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="preview-mockup">
-        <div class="mock-header">
-          <span class="mock-logo" style="display:flex;align-items:center;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-            TubeScout
-          </span>
-          <span class="mock-badge" style="display:flex;align-items:center;gap:4px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            Pro
-          </span>
-        </div>
-        <div class="mock-tabs">
-          <div class="mock-tab active" style="display:flex;align-items:center;justify-content:center;gap:3px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Nicho
-          </div>
-          <div class="mock-tab" style="display:flex;align-items:center;justify-content:center;gap:3px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Viral
-          </div>
-          <div class="mock-tab" style="display:flex;align-items:center;justify-content:center;gap:3px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Canal
-          </div>
-          <div class="mock-tab" style="display:flex;align-items:center;justify-content:center;gap:3px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Títulos
-          </div>
-          <div class="mock-tab" style="display:flex;align-items:center;justify-content:center">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-          </div>
-        </div>
-        <div class="mock-search">finanzas personales para jóvenes…</div>
-        <div class="mock-score-card">
-          <div class="mock-ring">78</div>
-          <div>
-            <div class="mock-ring-label">Alta Oportunidad</div>
-            <div class="mock-ring-sub">Buena demanda · Competencia manejable</div>
-          </div>
-        </div>
-        <div class="mock-income-card">
-          <div>
-            <div class="mock-income-val">$420–$770/mes</div>
-            <div class="mock-income-lbl">Ingreso estimado · CPM $25</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#a5b4fc;background:rgba(108,99,255,0.15);padding:4px 8px;border-radius:6px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            Finanzas
-          </div>
-        </div>
-        <div class="mock-stats">
-          <div class="mock-stat"><div class="mock-stat-val">284K</div><div class="mock-stat-lbl">Views prom.</div></div>
-          <div class="mock-stat"><div class="mock-stat-val">4.2%</div><div class="mock-stat-lbl">Engagement</div></div>
-          <div class="mock-stat"><div class="mock-stat-val">62%</div><div class="mock-stat-lbl">Largos</div></div>
-        </div>
-        <div class="mock-video">
-          <div class="mock-rank">#1</div>
-          <div class="mock-vtitle">Cómo invertir $100 al mes siendo joven</div>
-          <div style="display:flex;gap:4px;align-items:center">
-            <span class="mock-fmt long">Largo</span>
-            <div class="mock-vscore">82</div>
-          </div>
-        </div>
-        <div class="mock-video">
-          <div class="mock-rank">#2</div>
-          <div class="mock-vtitle">5 errores financieros a los 20 años</div>
-          <div style="display:flex;gap:4px;align-items:center">
-            <span class="mock-fmt short">Short</span>
-            <div class="mock-vscore">74</div>
-          </div>
-        </div>
-        <div class="mock-video">
-          <div class="mock-rank">#3</div>
-          <div class="mock-vtitle">Regla 50/30/20 — cómo aplicarla de verdad</div>
-          <div style="display:flex;gap:4px;align-items:center">
-            <span class="mock-fmt long">Largo</span>
-            <div class="mock-vscore">61</div>
-          </div>
-        </div>
+      <div class="how-step">
+        <div class="step-num-wrap">3</div>
+        <div class="step-title">Actúa con ventaja</div>
+        <div class="step-desc">El Opportunity Score, el estimador de ingresos y los títulos generados te dan todo lo que necesitas para ganarle a la competencia.</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section id="pricing">
-  <div class="section" style="text-align:center">
-    <div class="section-label">Precios</div>
-    <h2 class="section-title">Empieza gratis, escala cuando lo necesites</h2>
-    <p class="section-sub" style="margin:0 auto">Sin compromisos. El plan Free ya te da acceso a las funciones principales.</p>
+<section id="pricing" class="pricing-section">
+  <div class="pricing-inner">
+    <div class="section-eyebrow" style="text-align:center">Precios</div>
+    <h2 class="section-headline" style="text-align:center">Empieza gratis.<br><span class="grad-text">Escala cuando quieras.</span></h2>
+    <p class="section-sub" style="margin:0 auto 0;text-align:center">Sin permanencia. Sin sorpresas. Cancela cuando quieras.</p>
     <div class="pricing-grid">
+
+      <!-- FREE -->
       <div class="price-card">
         <div class="price-plan">Free</div>
-        <div class="price-amount">$0</div>
+        <div class="price-amount"><sup>$</sup>0</div>
         <div class="price-desc">Para creadores que quieren explorar oportunidades sin compromiso.</div>
-        <ul class="price-features">
-          <li><span class="pf-check">✓</span> 10 análisis por día</li>
-          <li><span class="pf-check">✓</span> Niche Analyzer completo</li>
-          <li><span class="pf-check">✓</span> Trending por categoría y región</li>
-          <li><span class="pf-check">✓</span> Estimador de ingresos CPM</li>
-          <li><span class="pf-check">✓</span> Análisis básico de canales</li>
-          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Análisis ilimitados</span></li>
-          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Historial completo en dashboard</span></li>
-          <li><span class="pf-x">✗</span> <span style="color:#9ca3af">Exportación CSV</span></li>
+        <a href="#" class="price-btn price-btn-free">Instalar gratis</a>
+        <ul class="price-feats">
+          <li><span class="pf-ok">✓</span> 10 análisis por día</li>
+          <li><span class="pf-ok">✓</span> Niche Analyzer completo</li>
+          <li><span class="pf-ok">✓</span> Estimador de ingresos CPM</li>
+          <li><span class="pf-ok">✓</span> Trending por región</li>
+          <li><span class="pf-ok">✓</span> Análisis básico de canales</li>
+          <li><span class="pf-no">–</span> <span style="color:var(--muted)">Análisis ilimitados</span></li>
+          <li><span class="pf-no">–</span> <span style="color:var(--muted)">Historial en dashboard</span></li>
+          <li><span class="pf-no">–</span> <span style="color:var(--muted)">Exportación CSV</span></li>
         </ul>
-        <a href="#" class="btn-price btn-price-free">Instalar gratis</a>
       </div>
-      <div class="price-card popular">
-        <div class="popular-tag">Más popular</div>
+
+      <!-- PRO MENSUAL -->
+      <div class="price-card featured">
+        <div class="price-tag-featured">Más popular</div>
         <div class="price-plan">Pro</div>
-        <div class="price-amount">$9<span>/mes</span></div>
+        <div class="price-amount"><sup>$</sup>9<sub>/mes</sub></div>
         <div class="price-desc">Para creadores serios y agencias que necesitan datos sin límites.</div>
-        <ul class="price-features">
-          <li><span class="pf-check">✓</span> Análisis ilimitados</li>
-          <li><span class="pf-check">✓</span> Todas las funciones Free</li>
-          <li><span class="pf-check">✓</span> Generador de títulos ilimitado</li>
-          <li><span class="pf-check">✓</span> Generador de tags ilimitado</li>
-          <li><span class="pf-check">✓</span> Dashboard con historial completo</li>
-          <li><span class="pf-check">✓</span> Favoritos sincronizados</li>
-          <li><span class="pf-check">✓</span> Exportación CSV</li>
-          <li><span class="pf-check">✓</span> Soporte prioritario</li>
+        <a href="#" class="price-btn price-btn-pro">Empezar Pro →</a>
+        <ul class="price-feats">
+          <li><span class="pf-ok">✓</span> Análisis ilimitados</li>
+          <li><span class="pf-ok">✓</span> Todo lo incluido en Free</li>
+          <li><span class="pf-ok">✓</span> Generador de títulos y tags ilimitado</li>
+          <li><span class="pf-ok">✓</span> Dashboard con historial completo</li>
+          <li><span class="pf-ok">✓</span> Favoritos sincronizados</li>
+          <li><span class="pf-ok">✓</span> Exportación CSV</li>
+          <li><span class="pf-ok">✓</span> Análisis de formatos avanzado</li>
+          <li><span class="pf-ok">✓</span> Soporte prioritario</li>
         </ul>
-        <a href="#" class="btn-price btn-price-pro">Empezar Pro →</a>
       </div>
+
+      <!-- PRO ANUAL -->
       <div class="price-card annual">
-        <div class="annual-tag">Ahorra 36%</div>
+        <div class="price-tag-annual">Ahorra 36%</div>
         <div class="price-plan">Pro Anual</div>
-        <div class="price-amount">
-          <span class="price-amount-cross">$108</span>$69<span>/año</span>
-        </div>
-        <div class="price-desc">Todas las funciones Pro pagando una vez al año. Equivale a solo $5.75/mes.</div>
-        <ul class="price-features">
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Todo lo incluido en Pro</li>
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Análisis ilimitados</li>
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Dashboard con historial completo</li>
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Favoritos sincronizados</li>
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Exportación CSV</li>
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Soporte prioritario</li>
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Nuevas funciones incluidas</li>
-          <li><span class="pf-check" style="color:var(--green)">✓</span> Sin renovación automática</li>
+        <div class="price-amount"><span class="price-cross">$108</span><sup>$</sup>69<sub>/año</sub></div>
+        <div class="price-desc">Todo lo de Pro por un único pago anual. Equivale a solo $5.75/mes.</div>
+        <a href="#" class="price-btn price-btn-annual">Empezar Plan Anual →</a>
+        <ul class="price-feats">
+          <li><span class="pf-ok green">✓</span> Todo lo incluido en Pro</li>
+          <li><span class="pf-ok green">✓</span> Análisis ilimitados</li>
+          <li><span class="pf-ok green">✓</span> Dashboard + historial completo</li>
+          <li><span class="pf-ok green">✓</span> Exportación CSV</li>
+          <li><span class="pf-ok green">✓</span> Soporte prioritario</li>
+          <li><span class="pf-ok green">✓</span> Nuevas funciones incluidas</li>
+          <li><span class="pf-ok green">✓</span> Un pago, sin renovación automática</li>
+          <li><span class="pf-ok green">✓</span> Ahorra $39 al año</li>
         </ul>
-        <a href="#" class="btn-price" style="background:var(--green);color:#052e16">Empezar Plan Anual →</a>
       </div>
+
     </div>
   </div>
 </section>
 
 <!-- FAQ -->
-<section id="faq" style="background:#f8faff">
-  <div class="section">
-    <div class="section-label">FAQ</div>
-    <h2 class="section-title">Preguntas frecuentes</h2>
+<section id="faq">
+  <div class="faq-section">
+    <div class="section-eyebrow" style="text-align:center">FAQ</div>
+    <h2 class="section-headline" style="text-align:center">Preguntas <span class="grad-text">frecuentes</span></h2>
     <div class="faq-list">
       <div class="faq-item">
-        <div class="faq-q">¿Cómo se calculan los datos? ¿Son precisos?</div>
-        <div class="faq-a">TubeScout usa la API oficial de YouTube (YouTube Data API v3). Los datos de views, likes, comentarios y suscriptores son los mismos que muestra YouTube públicamente. El Viral Score, Opportunity Score y el estimador de ingresos CPM son métricas propias calculadas sobre esos datos reales.</div>
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          ¿Los datos son reales o estimaciones?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">TubeScout usa la API oficial de YouTube (YouTube Data API v3). Los datos de views, likes, comentarios y suscriptores son exactamente los que muestra YouTube públicamente. El Opportunity Score y el estimador de ingresos CPM son métricas propias calculadas sobre esos datos reales.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">¿Cuántos análisis incluye el plan Free?</div>
-        <div class="faq-a">El plan Free incluye 10 análisis por día (nicho + canal combinados). Se resetean automáticamente cada día. Los videos trending se pueden ver sin límite.</div>
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          ¿Cuántos análisis incluye el plan Free?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">El plan Free incluye 10 análisis por día (nicho + canal combinados). Se resetean automáticamente cada día a medianoche. Los videos trending se pueden ver sin límite. Con Pro los análisis son ilimitados.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">¿Cómo se calcula el estimador de ingresos?</div>
-        <div class="faq-a">Se basa en el CPM promedio del nicho (ej: finanzas tiene CPM de $25, gaming tiene CPM de $3) y las views promedio de los videos del nicho. La proyección considera una monetización del 30-55%, que es el rango real en YouTube.</div>
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          ¿Cómo funciona el estimador de ingresos CPM?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Se basa en el CPM promedio real del nicho (finanzas: ~$25, gaming: ~$3, fitness: ~$8) y las views promedio de los videos del nicho. La proyección considera una monetización del 30–55%, que es el rango típico en YouTube.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">¿Funciona para canales en español?</div>
-        <div class="faq-a">Sí. Puedes filtrar trending por región (ES, MX, AR, BR) y buscar nichos en cualquier idioma. TubeScout analiza YouTube globalmente con datos reales de cada mercado.</div>
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          ¿Funciona para canales en español?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Sí. Puedes filtrar trending por región (ES, MX, AR, BR, US) y buscar nichos en cualquier idioma. TubeScout analiza YouTube globalmente con datos reales de cada mercado.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">¿Qué es el Dashboard web?</div>
-        <div class="faq-a">Es un panel web donde puedes ver todo tu historial de análisis, tus nichos favoritos guardados y estadísticas de uso. Accesible desde cualquier dispositivo, no solo desde la extensión.</div>
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          ¿Qué es el Dashboard web?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Es un panel web accesible desde cualquier dispositivo donde puedes ver tu historial completo de análisis, tus nichos favoritos guardados y estadísticas de uso. Requiere registro gratuito con email.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">¿Puedo cancelar el plan Pro en cualquier momento?</div>
-        <div class="faq-a">Sí. Sin permanencia ni penalizaciones. Cancelas desde tu panel en Lemon Squeezy y el acceso Pro continúa hasta el fin del período pagado.</div>
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          ¿Puedo cancelar el plan Pro cuando quiera?
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Sí. Sin permanencia ni penalizaciones. Cancelas desde tu panel de Lemon Squeezy y el acceso Pro continúa hasta el fin del período pagado. El plan anual es un único pago sin renovación automática.</div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- FINAL CTA -->
+<div class="final-cta">
+  <h2>Empieza a dominar YouTube <span class="grad-text">hoy mismo</span></h2>
+  <p>Gratis. Sin tarjeta. Listo en 60 segundos.</p>
+  <a href="#" class="btn-hero-primary">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Instalar en Chrome — Gratis
+  </a>
+</div>
+
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">
-    <span style="color:var(--accent);display:flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
-    <span class="footer-logo-text">TubeScout</span>
+  <div class="footer-inner">
+    <a href="/" class="footer-logo">
+      <span style="color:var(--accent);display:flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg></span>
+      <span class="footer-logo-text">TubeScout</span>
+    </a>
+    <div class="footer-links">
+      <a href="#features">Funciones</a>
+      <a href="#pricing">Precios</a>
+      <a href="#faq">FAQ</a>
+      <a href="/dashboard.html">Dashboard</a>
+      <a href="mailto:hello@tubescout.io">Soporte</a>
+    </div>
+    <div class="footer-copy">© 2026 TubeScout · No afiliado a YouTube ni a Google.</div>
   </div>
-  <div class="footer-links">
-    <a href="#features">Funciones</a>
-    <a href="#pricing">Precios</a>
-    <a href="#faq">FAQ</a>
-    <a href="/dashboard.html">Dashboard</a>
-    <a href="mailto:hello@tubescout.io">Soporte</a>
-  </div>
-  <p class="footer-copy">© 2026 TubeScout. No afiliado a YouTube ni a Google.</p>
 </footer>
 
 </body>

@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TubeScout — Dashboard</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:      #080910;
@@ -24,7 +27,8 @@
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    h1, h2, h3, .auth-title, .stat-val, .plan-title, .dash-section-title, .locked-title, .pro-feat-title { font-family: 'Syne', sans-serif; }
 
     /* ── NAV ── */
     nav {
@@ -36,7 +40,7 @@
     }
     .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
     .nav-logo-icon { color: var(--accent); display: flex; }
-    .nav-logo-text { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .nav-logo-text { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; font-family: 'Syne', sans-serif; }
     .nav-right { display: flex; align-items: center; gap: 14px; }
     .nav-user { font-size: 13px; color: var(--muted2); }
     .badge-pro {
