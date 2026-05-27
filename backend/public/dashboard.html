@@ -3,220 +3,283 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TubeScout — Mi Dashboard</title>
+  <title>TubeScout — Dashboard</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <style>
     :root {
-      --accent: #6C63FF;
-      --accent-dark: #5A52D5;
-      --bg: #0F1117;
-      --card: #1A1D2E;
-      --border: #2D3148;
-      --text: #E2E8F0;
-      --muted: #94A3B8;
-      --green: #4ADE80;
-      --yellow: #FBBF24;
-      --red: #F87171;
+      --bg:      #080910;
+      --s1:      #0E1020;
+      --s2:      #141729;
+      --border:  rgba(255,255,255,0.07);
+      --accent:  #7C6FFF;
+      --pink:    #E879F9;
+      --cyan:    #22D3EE;
+      --green:   #34D399;
+      --amber:   #FBBF24;
+      --red:     #F87171;
+      --blue:    #60A5FA;
+      --text:    #EDF0FF;
+      --muted:   #5A6380;
+      --muted2:  #8892B0;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* ── Nav ── */
+    /* ── NAV ── */
     nav {
-      background: rgba(15,17,23,0.96);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
+      position: sticky; top: 0; z-index: 100;
+      height: 64px; padding: 0 32px;
       display: flex; align-items: center; justify-content: space-between;
-      height: 60px; position: sticky; top: 0; z-index: 100;
-      backdrop-filter: blur(12px);
+      background: rgba(8,9,16,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
     }
-    .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-    .nav-logo-text { font-size: 16px; font-weight: 700; color: var(--text); }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .nav-user { font-size: 13px; color: var(--muted); }
-    .badge-pro { background: linear-gradient(135deg,#6C63FF,#4ADE80); color: white; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
-    .badge-free { background: var(--card); color: var(--muted); border: 1px solid var(--border); font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 700; }
-    .btn-logout { font-size: 13px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 6px 10px; border-radius: 6px; transition: color 0.15s; }
-    .btn-logout:hover { color: var(--red); }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon { color: var(--accent); display: flex; }
+    .nav-logo-text { font-size: 17px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
+    .nav-user { font-size: 13px; color: var(--muted2); }
+    .badge-pro {
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      color: white; font-size: 11px; padding: 4px 12px; border-radius: 100px;
+      font-weight: 700; letter-spacing: 0.03em;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .badge-free {
+      background: var(--s2); color: var(--muted2);
+      border: 1px solid var(--border);
+      font-size: 11px; padding: 4px 12px; border-radius: 100px; font-weight: 700;
+    }
+    .btn-logout {
+      font-size: 13px; color: var(--muted2); background: none; border: 1px solid var(--border);
+      cursor: pointer; padding: 7px 14px; border-radius: 8px; font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+    .nav-home { font-size: 13px; color: var(--muted2); text-decoration: none; transition: color 0.15s; }
+    .nav-home:hover { color: var(--text); }
 
-    /* ── Auth screen ── */
+    /* ── AUTH SCREEN ── */
     #auth-screen {
       display: flex; align-items: center; justify-content: center;
-      min-height: calc(100vh - 60px); padding: 24px;
+      min-height: calc(100vh - 64px); padding: 32px;
+      position: relative; overflow: hidden;
+    }
+    #auth-screen::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(124,111,255,0.1), transparent);
+      pointer-events: none;
     }
     .auth-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 400px;
-      text-align: center;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 24px; padding: 48px 40px; width: 100%; max-width: 420px;
+      text-align: center; position: relative; z-index: 1;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,111,255,0.08);
     }
-    .auth-icon { font-size: 40px; margin-bottom: 16px; }
-    .auth-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 8px; }
-    .auth-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+    .auth-brand {
+      display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 32px;
+    }
+    .auth-brand-icon { color: var(--accent); }
+    .auth-brand-text { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; }
+    .auth-title { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 10px; letter-spacing: -0.02em; }
+    .auth-sub { font-size: 14px; color: var(--muted2); margin-bottom: 32px; line-height: 1.65; }
+    .auth-label { display: block; text-align: left; font-size: 12px; font-weight: 700; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
     .auth-input {
-      width: 100%; padding: 12px 14px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; color: var(--text); font-size: 15px;
-      margin-bottom: 12px; transition: border-color 0.15s;
+      width: 100%; padding: 13px 16px;
+      background: var(--s2); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-size: 15px;
+      margin-bottom: 14px; transition: border-color 0.15s; outline: none;
     }
-    .auth-input:focus { outline: none; border-color: var(--accent); }
+    .auth-input:focus { border-color: rgba(124,111,255,0.5); box-shadow: 0 0 0 3px rgba(124,111,255,0.1); }
+    .auth-input::placeholder { color: var(--muted); }
     .btn-auth {
-      width: 100%; padding: 13px; background: var(--accent); color: white;
-      border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
-      cursor: pointer; transition: background 0.15s;
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #5A52D5);
+      color: white; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.01em;
+      box-shadow: 0 4px 20px rgba(124,111,255,0.35);
     }
-    .btn-auth:hover { background: var(--accent-dark); }
-    .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; }
-    .auth-back { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; margin-top: 12px; }
+    .btn-auth:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(124,111,255,0.5); }
+    .btn-auth:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .auth-back {
+      background: none; border: none; color: var(--muted2); font-size: 13px;
+      cursor: pointer; margin-top: 14px; padding: 4px; transition: color 0.15s;
+    }
     .auth-back:hover { color: var(--text); }
-    .auth-msg { font-size: 13px; margin-top: 12px; min-height: 20px; }
+    .auth-msg { font-size: 13px; margin-top: 14px; min-height: 20px; line-height: 1.5; }
     .auth-msg.error { color: var(--red); }
     .auth-msg.ok { color: var(--green); }
+    .auth-divider { height: 1px; background: var(--border); margin: 28px 0; }
 
-    /* ── Dashboard layout ── */
-    #dashboard-screen { display: none; padding: 32px 24px; max-width: 1100px; margin: 0 auto; }
+    /* ── DASHBOARD LAYOUT ── */
+    #dashboard-screen { display: none; padding: 40px 32px; max-width: 1140px; margin: 0 auto; }
 
     /* Stats bar */
-    .stats-bar {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 14px; margin-bottom: 28px;
-    }
+    .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
     .stat-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 14px; padding: 18px 20px;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 16px; padding: 22px 24px;
+      transition: border-color 0.2s;
     }
-    .stat-val { font-size: 28px; font-weight: 800; }
-    .stat-val.accent { color: var(--accent); }
-    .stat-val.green { color: var(--green); }
-    .stat-lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stat-card:hover { border-color: rgba(255,255,255,0.12); }
+    .stat-label { font-size: 12px; font-weight: 600; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .stat-val { font-size: 36px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
+    .stat-val.v-accent { color: var(--accent); }
+    .stat-val.v-green  { color: var(--green); }
+    .stat-val.v-amber  { color: var(--amber); }
+    .stat-val.v-cyan   { color: var(--cyan); }
 
     /* Plan banner */
     .plan-banner {
-      border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      border-radius: 16px; padding: 20px 28px; margin-bottom: 36px;
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
     }
     .plan-banner.free {
-      background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(108,99,255,0.03));
-      border: 1px solid rgba(108,99,255,0.25);
+      background: linear-gradient(135deg, rgba(124,111,255,0.07), rgba(124,111,255,0.03));
+      border: 1px solid rgba(124,111,255,0.2);
     }
     .plan-banner.pro {
-      background: linear-gradient(135deg, rgba(108,99,255,0.18), rgba(74,222,128,0.08));
-      border: 1px solid rgba(108,99,255,0.5);
+      background: linear-gradient(135deg, rgba(124,111,255,0.15), rgba(52,211,153,0.06));
+      border: 1px solid rgba(124,111,255,0.35);
     }
-    .plan-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .plan-sub { font-size: 13px; color: var(--muted); }
+    .plan-info { display: flex; align-items: center; gap: 14px; }
+    .plan-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .plan-icon.free-icon { background: rgba(124,111,255,0.12); color: var(--accent); }
+    .plan-icon.pro-icon  { background: linear-gradient(135deg, var(--accent), var(--pink)); color: white; }
+    .plan-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+    .plan-sub   { font-size: 13px; color: var(--muted2); line-height: 1.5; }
     .btn-upgrade {
-      padding: 11px 22px; background: var(--accent); color: white;
-      border: none; border-radius: 10px; font-size: 14px; font-weight: 700;
-      cursor: pointer; text-decoration: none; transition: all 0.15s; white-space: nowrap;
-      box-shadow: 0 4px 16px rgba(108,99,255,0.35);
+      padding: 11px 24px;
+      background: linear-gradient(135deg, var(--accent), #5A52D5);
+      color: white; border: none; border-radius: 10px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      text-decoration: none; transition: all 0.15s; white-space: nowrap;
+      box-shadow: 0 4px 16px rgba(124,111,255,0.35);
+      display: flex; align-items: center; gap: 7px;
     }
-    .btn-upgrade:hover { background: var(--accent-dark); transform: translateY(-1px); }
+    .btn-upgrade:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(124,111,255,0.5); }
 
     /* Sections */
-    .dash-section { margin-bottom: 40px; }
-    .dash-section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 16px;
-    }
-    .dash-section-title { font-size: 15px; font-weight: 700; color: var(--text); }
-    .dash-count { font-size: 13px; color: var(--muted); }
+    .dash-section { margin-bottom: 44px; }
+    .dash-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .section-title-wrap { display: flex; align-items: center; gap: 10px; }
+    .section-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .dash-section-title { font-size: 15px; font-weight: 800; color: var(--text); }
+    .dash-count { font-size: 13px; color: var(--muted2); font-weight: 500; }
 
     /* ── PAYWALL ── */
     .locked-section { position: relative; }
     .locked-overlay {
       position: absolute; inset: 0;
-      backdrop-filter: blur(6px);
-      background: linear-gradient(to bottom, transparent 0%, rgba(15,17,23,0.7) 30%, rgba(15,17,23,0.95) 60%);
-      border-radius: 14px;
+      backdrop-filter: blur(7px);
+      background: linear-gradient(to bottom, transparent 0%, rgba(8,9,16,0.6) 25%, rgba(8,9,16,0.96) 55%);
+      border-radius: 16px;
       display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-      padding: 32px 24px; z-index: 10;
+      padding: 36px 24px 32px; z-index: 10;
     }
-    .locked-icon { font-size: 32px; margin-bottom: 12px; }
-    .locked-title { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 6px; text-align: center; }
-    .locked-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; text-align: center; max-width: 320px; line-height: 1.6; }
+    .locked-icon-wrap {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: rgba(124,111,255,0.1); border: 1px solid rgba(124,111,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent); margin-bottom: 14px;
+    }
+    .locked-title { font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 8px; text-align: center; }
+    .locked-sub { font-size: 13px; color: var(--muted2); margin-bottom: 20px; text-align: center; max-width: 340px; line-height: 1.65; }
+    .locked-perks { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+    .locked-perk { font-size: 12px; color: #a5b4fc; display: flex; align-items: center; gap: 6px; font-weight: 600; }
     .btn-unlock {
-      padding: 12px 28px; background: linear-gradient(135deg, var(--accent), #8b5cf6);
-      color: white; border: none; border-radius: 10px;
+      padding: 13px 32px;
+      background: linear-gradient(135deg, var(--accent), var(--pink));
+      color: white; border: none; border-radius: 12px;
       font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none;
-      box-shadow: 0 4px 20px rgba(108,99,255,0.4); transition: all 0.15s;
+      box-shadow: 0 6px 24px rgba(124,111,255,0.4);
+      transition: all 0.2s; display: flex; align-items: center; gap: 8px;
     }
-    .btn-unlock:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(108,99,255,0.5); }
-    .locked-perks {
-      display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
-      margin-bottom: 20px;
-    }
-    .locked-perk { font-size: 12px; color: #a5b4fc; display: flex; align-items: center; gap: 5px; }
+    .btn-unlock:hover { transform: translateY(-1px); box-shadow: 0 10px 32px rgba(124,111,255,0.55); }
 
     /* History */
-    .history-list { display: flex; flex-direction: column; gap: 8px; }
+    .history-list { display: flex; flex-direction: column; gap: 6px; }
     .history-item {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 10px; padding: 13px 16px;
-      display: flex; align-items: center; gap: 12px;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 12px; padding: 13px 16px;
+      display: flex; align-items: center; gap: 13px;
       transition: border-color 0.15s;
     }
-    .history-item:hover { border-color: rgba(108,99,255,0.35); }
+    .history-item:hover { border-color: rgba(124,111,255,0.25); }
     .h-icon {
       width: 34px; height: 34px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; flex-shrink: 0;
+      flex-shrink: 0; color: white;
     }
-    .h-icon.niche { background: rgba(108,99,255,0.15); }
-    .h-icon.channel { background: rgba(74,222,128,0.12); }
-    .h-icon.keywords { background: rgba(251,191,36,0.12); }
-    .h-icon.titles { background: rgba(248,113,113,0.12); }
+    .h-icon.niche    { background: #6C63FF; }
+    .h-icon.channel  { background: #3B82F6; }
+    .h-icon.keywords { background: #F59E0B; }
+    .h-icon.titles   { background: #EF4444; }
     .h-query { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .h-meta { font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
-    .h-date { display: block; }
-    .h-type { display: block; margin-top: 2px; }
+    .h-meta { font-size: 11px; color: var(--muted2); text-align: right; flex-shrink: 0; line-height: 1.6; }
 
     /* Favorites */
     .fav-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
     .fav-card {
-      background: var(--card); border: 1px solid var(--border);
-      border-radius: 12px; padding: 16px;
-      display: flex; flex-direction: column; gap: 10px;
+      background: var(--s1); border: 1px solid var(--border);
+      border-radius: 14px; padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 12px;
       transition: border-color 0.15s;
     }
-    .fav-card:hover { border-color: rgba(108,99,255,0.35); }
-    .fav-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-    .fav-query { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
-    .fav-score { font-size: 13px; font-weight: 800; padding: 3px 9px; border-radius: 8px; flex-shrink: 0; }
-    .fav-score.high { background: rgba(74,222,128,0.15); color: var(--green); }
-    .fav-score.mid { background: rgba(251,191,36,0.15); color: var(--yellow); }
-    .fav-score.low { background: rgba(248,113,113,0.15); color: var(--red); }
-    .fav-date { font-size: 11px; color: var(--muted); }
+    .fav-card:hover { border-color: rgba(124,111,255,0.3); }
+    .fav-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .fav-query { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; line-height: 1.4; }
+    .fav-score { font-size: 13px; font-weight: 800; padding: 3px 10px; border-radius: 8px; flex-shrink: 0; }
+    .fav-score.high { background: rgba(52,211,153,0.12); color: var(--green); }
+    .fav-score.mid  { background: rgba(251,191,36,0.12);  color: var(--amber); }
+    .fav-score.low  { background: rgba(248,113,113,0.12); color: var(--red); }
+    .fav-bottom { display: flex; align-items: center; justify-content: space-between; }
+    .fav-date { font-size: 11px; color: var(--muted2); }
     .btn-fav-del {
-      font-size: 11px; color: var(--muted); background: none;
+      font-size: 11px; color: var(--muted2); background: none;
       border: 1px solid var(--border); border-radius: 6px;
-      padding: 4px 10px; cursor: pointer; align-self: flex-start;
-      transition: all 0.15s;
+      padding: 4px 10px; cursor: pointer; transition: all 0.15s; font-weight: 600;
     }
     .btn-fav-del:hover { border-color: var(--red); color: var(--red); }
 
+    /* Pro feature cards */
+    .pro-features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .pro-feat-card {
+      background: var(--s1); border: 1px solid rgba(124,111,255,0.15);
+      border-radius: 14px; padding: 20px;
+    }
+    .pro-feat-icon-wrap { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; color: white; }
+    .pro-feat-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 5px; }
+    .pro-feat-desc  { font-size: 12px; color: var(--muted2); line-height: 1.55; }
+
     /* Empty & loading */
-    .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); font-size: 14px; }
-    .empty-icon { font-size: 36px; display: block; margin-bottom: 12px; }
-    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; gap: 10px; color: var(--muted); font-size: 14px; }
-    .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    .empty-state {
+      text-align: center; padding: 52px 24px; color: var(--muted2); font-size: 14px;
+      background: var(--s1); border: 1px solid var(--border); border-radius: 14px;
+      line-height: 1.6;
+    }
+    .empty-icon-wrap { width: 48px; height: 48px; border-radius: 12px; background: var(--s2); display: flex; align-items: center; justify-content: center; color: var(--muted); margin: 0 auto 14px; }
+    .loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 48px; gap: 10px; color: var(--muted2); font-size: 14px;
+    }
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 0.7s linear infinite; flex-shrink: 0;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Pro feature cards (CTA section for free users) */
-    .pro-features-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 8px;
+    @media (max-width: 900px) {
+      .stats-bar { grid-template-columns: repeat(2,1fr); }
     }
-    .pro-feat-card {
-      background: rgba(108,99,255,0.06); border: 1px solid rgba(108,99,255,0.2);
-      border-radius: 12px; padding: 16px; text-align: center;
-    }
-    .pro-feat-icon { font-size: 26px; margin-bottom: 8px; }
-    .pro-feat-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .pro-feat-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
     @media (max-width: 600px) {
-      #dashboard-screen { padding: 20px 16px; }
-      .h-type { display: none; }
-      .auth-card { padding: 28px 20px; }
+      nav { padding: 0 20px; }
+      #dashboard-screen { padding: 24px 16px; }
+      .auth-card { padding: 32px 24px; }
+      .stats-bar { grid-template-columns: repeat(2,1fr); gap: 10px; }
+      .plan-banner { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -224,30 +287,41 @@
 
 <nav>
   <a href="/" class="nav-logo">
-    <span style="font-size:20px">🎯</span>
+    <span class="nav-logo-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+    </span>
     <span class="nav-logo-text">TubeScout</span>
   </a>
   <div class="nav-right">
+    <a href="/" class="nav-home">← Inicio</a>
     <span class="nav-user" id="nav-email"></span>
     <span id="nav-badge"></span>
-    <button class="btn-logout" id="btn-logout" style="display:none" onclick="logout()">Salir</button>
+    <button class="btn-logout" id="btn-logout" style="display:none" onclick="logout()">Cerrar sesión</button>
   </div>
 </nav>
 
 <!-- AUTH SCREEN -->
 <div id="auth-screen">
   <div class="auth-card">
-    <div class="auth-icon">🎯</div>
+    <div class="auth-brand">
+      <span class="auth-brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="22" y1="12" x2="19" y2="12"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      </span>
+      <span class="auth-brand-text">TubeScout</span>
+    </div>
+
     <div class="auth-title">Accede a tu Dashboard</div>
-    <div class="auth-sub" id="auth-sub">Ingresa tu email para ver tu historial, favoritos y estadísticas.</div>
+    <div class="auth-sub" id="auth-sub">Ingresa tu email para ver tu historial, favoritos y estadísticas de uso.</div>
 
     <div id="step-email">
+      <label class="auth-label" for="input-email">Email</label>
       <input type="email" class="auth-input" id="input-email" placeholder="tu@email.com" />
       <button class="btn-auth" id="btn-send-code" onclick="sendCode()">Enviar código de acceso</button>
     </div>
 
     <div id="step-code" style="display:none">
-      <input type="text" class="auth-input" id="input-code" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center;letter-spacing:0.2em;font-size:20px" />
+      <label class="auth-label" for="input-code">Código de verificación</label>
+      <input type="text" class="auth-input" id="input-code" placeholder="000000" maxlength="6" style="text-align:center;letter-spacing:0.25em;font-size:22px;font-weight:700" />
       <button class="btn-auth" id="btn-verify-code" onclick="verifyCode()">Verificar y entrar</button>
       <button class="auth-back" onclick="backToEmail()">← Cambiar email</button>
     </div>
@@ -262,48 +336,65 @@
   <!-- Stats bar -->
   <div class="stats-bar">
     <div class="stat-card">
-      <div class="stat-val accent" id="stat-today">–</div>
-      <div class="stat-lbl">Análisis hoy</div>
+      <div class="stat-label">Análisis hoy</div>
+      <div class="stat-val v-accent" id="stat-today">–</div>
     </div>
     <div class="stat-card">
-      <div class="stat-val" id="stat-limit">–</div>
-      <div class="stat-lbl">Límite diario</div>
+      <div class="stat-label">Límite diario</div>
+      <div class="stat-val" id="stat-limit" style="color:var(--text)">–</div>
     </div>
     <div class="stat-card">
-      <div class="stat-val green" id="stat-total">–</div>
-      <div class="stat-lbl">Análisis totales</div>
+      <div class="stat-label">Análisis totales</div>
+      <div class="stat-val v-green" id="stat-total">–</div>
     </div>
     <div class="stat-card">
-      <div class="stat-val" id="stat-favs">–</div>
-      <div class="stat-lbl">Favoritos guardados</div>
+      <div class="stat-label">Favoritos guardados</div>
+      <div class="stat-val v-amber" id="stat-favs">–</div>
     </div>
   </div>
 
   <!-- Plan banner -->
   <div class="plan-banner free" id="plan-banner">
-    <div>
-      <div class="plan-title" id="plan-title">Plan Free</div>
-      <div class="plan-sub" id="plan-sub">Desbloquea análisis ilimitados, historial completo y favoritos sincronizados.</div>
+    <div class="plan-info">
+      <div class="plan-icon free-icon" id="plan-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div>
+        <div class="plan-title" id="plan-title">Plan Free</div>
+        <div class="plan-sub" id="plan-sub">Desbloquea análisis ilimitados, historial completo y favoritos sincronizados.</div>
+      </div>
     </div>
-    <a href="/#pricing" class="btn-upgrade" id="plan-btn">⭐ Actualizar a Pro — $9/mes</a>
+    <a href="/#pricing" class="btn-upgrade" id="plan-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Actualizar a Pro — $9/mes
+    </a>
   </div>
 
   <!-- FAVORITOS -->
   <div class="dash-section">
     <div class="dash-section-header">
-      <div class="dash-section-title">⭐ Nichos Favoritos</div>
+      <div class="section-title-wrap">
+        <div class="section-icon" style="background:#F59E0B20;color:#F59E0B">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="dash-section-title">Nichos Favoritos</div>
+      </div>
       <div class="dash-count" id="fav-count"></div>
     </div>
     <div class="locked-section" id="fav-section">
       <div id="fav-container"><div class="loading"><div class="spinner"></div> Cargando...</div></div>
-      <!-- Overlay se inserta dinámicamente para usuarios free sin favoritos suficientes -->
     </div>
   </div>
 
   <!-- HISTORIAL -->
   <div class="dash-section">
     <div class="dash-section-header">
-      <div class="dash-section-title">🕐 Historial de Análisis</div>
+      <div class="section-title-wrap">
+        <div class="section-icon" style="background:#7C6FFF20;color:var(--accent)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="dash-section-title">Historial de Análisis</div>
+      </div>
       <div class="dash-count" id="history-count"></div>
     </div>
     <div class="locked-section" id="history-section">
@@ -312,34 +403,50 @@
   </div>
 
   <!-- PRO CTA (solo para free) -->
-  <div id="pro-cta-section" style="display:none; margin-bottom:40px">
+  <div id="pro-cta-section" style="display:none; margin-bottom:48px">
     <div class="dash-section-header">
-      <div class="dash-section-title">🚀 Funciones exclusivas Pro</div>
+      <div class="section-title-wrap">
+        <div class="section-icon" style="background:linear-gradient(135deg,var(--accent),var(--pink));color:white">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+        </div>
+        <div class="dash-section-title">Funciones exclusivas Pro</div>
+      </div>
     </div>
     <div class="pro-features-grid">
       <div class="pro-feat-card">
-        <div class="pro-feat-icon">♾️</div>
+        <div class="pro-feat-icon-wrap" style="background:#7C6FFF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h12z"/><path d="M8 10h8"/><path d="M8 14h8"/></svg>
+        </div>
         <div class="pro-feat-title">Análisis ilimitados</div>
-        <div class="pro-feat-desc">Sin límite diario. Analiza todos los nichos que quieras.</div>
+        <div class="pro-feat-desc">Sin límite diario. Analiza todos los nichos que quieras sin restricciones.</div>
       </div>
       <div class="pro-feat-card">
-        <div class="pro-feat-icon">📋</div>
+        <div class="pro-feat-icon-wrap" style="background:#3B82F6">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
         <div class="pro-feat-title">Historial completo</div>
         <div class="pro-feat-desc">Accede a todos tus análisis anteriores. Free solo muestra los últimos 3.</div>
       </div>
       <div class="pro-feat-card">
-        <div class="pro-feat-icon">⭐</div>
+        <div class="pro-feat-icon-wrap" style="background:#F59E0B">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
         <div class="pro-feat-title">Favoritos ilimitados</div>
-        <div class="pro-feat-desc">Guarda todos los nichos que quieras. Free solo muestra 2.</div>
+        <div class="pro-feat-desc">Guarda todos los nichos que quieras. El plan Free solo muestra 2.</div>
       </div>
       <div class="pro-feat-card">
-        <div class="pro-feat-icon">📊</div>
+        <div class="pro-feat-icon-wrap" style="background:#34D399">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
         <div class="pro-feat-title">Exportación CSV</div>
-        <div class="pro-feat-desc">Descarga cualquier análisis en Excel o Google Sheets.</div>
+        <div class="pro-feat-desc">Descarga cualquier análisis directamente en Excel o Google Sheets.</div>
       </div>
     </div>
-    <div style="text-align:center;margin-top:24px">
-      <a href="/#pricing" class="btn-unlock">⭐ Desbloquear todo con Pro — $9/mes</a>
+    <div style="text-align:center;margin-top:28px">
+      <a href="/#pricing" class="btn-unlock">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Desbloquear todo con Pro — $9/mes
+      </a>
     </div>
   </div>
 
@@ -351,10 +458,10 @@ let token = localStorage.getItem('ts_token');
 let isPro = false;
 
 const typeIcons = {
-  niche:    { emoji: '🔍', label: 'Nicho',    cls: 'niche' },
-  channel:  { emoji: '📊', label: 'Canal',    cls: 'channel' },
-  keywords: { emoji: '🔑', label: 'Keywords', cls: 'keywords' },
-  titles:   { emoji: '✏️', label: 'Títulos',  cls: 'titles' },
+  niche:    { svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>', label: 'Nicho',    cls: 'niche' },
+  channel:  { svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>', label: 'Canal',    cls: 'channel' },
+  keywords: { svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>', label: 'Keywords', cls: 'keywords' },
+  titles:   { svg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>', label: 'Títulos',  cls: 'titles' },
 };
 
 /* ── Auth ── */
@@ -415,7 +522,7 @@ async function verifyCode() {
 function backToEmail() {
   document.getElementById('step-email').style.display = 'block';
   document.getElementById('step-code').style.display = 'none';
-  document.getElementById('auth-sub').textContent = 'Ingresa tu email para ver tu historial, favoritos y estadísticas.';
+  document.getElementById('auth-sub').textContent = 'Ingresa tu email para ver tu historial, favoritos y estadísticas de uso.';
   setMsg('');
 }
 
@@ -455,20 +562,24 @@ function escapeHtml(s) {
 
 function addLockedOverlay(sectionId, title, subtitle) {
   const section = document.getElementById(sectionId);
-  // Remove existing overlay if any
   section.querySelectorAll('.locked-overlay').forEach(el => el.remove());
   const overlay = document.createElement('div');
   overlay.className = 'locked-overlay';
   overlay.innerHTML = `
-    <div class="locked-icon">🔒</div>
+    <div class="locked-icon-wrap">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
     <div class="locked-title">${title}</div>
     <div class="locked-sub">${subtitle}</div>
     <div class="locked-perks">
-      <span class="locked-perk">♾️ Análisis ilimitados</span>
-      <span class="locked-perk">📋 Historial completo</span>
-      <span class="locked-perk">⭐ Favoritos ilimitados</span>
+      <span class="locked-perk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Análisis ilimitados</span>
+      <span class="locked-perk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Historial completo</span>
+      <span class="locked-perk"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Favoritos ilimitados</span>
     </div>
-    <a href="/#pricing" class="btn-unlock">⭐ Desbloquear con Pro — $9/mes</a>
+    <a href="/#pricing" class="btn-unlock">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Desbloquear con Pro — $9/mes
+    </a>
   `;
   section.appendChild(overlay);
 }
@@ -484,10 +595,12 @@ async function loadStats() {
     isPro = !!data.isPro;
 
     if (isPro) {
-      document.getElementById('nav-badge').innerHTML = '<span class="badge-pro">⭐ Pro</span>';
+      document.getElementById('nav-badge').innerHTML = '<span class="badge-pro"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Pro</span>';
       const b = document.getElementById('plan-banner');
       b.className = 'plan-banner pro';
-      document.getElementById('plan-title').textContent = '⭐ Plan Pro activo';
+      document.getElementById('plan-icon').className = 'plan-icon pro-icon';
+      document.getElementById('plan-icon').innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+      document.getElementById('plan-title').textContent = 'Plan Pro activo';
       document.getElementById('plan-sub').textContent   = 'Análisis ilimitados · Historial completo · Favoritos sincronizados · Exportación CSV';
       document.getElementById('plan-btn').style.display = 'none';
       document.getElementById('pro-cta-section').style.display = 'none';
@@ -507,27 +620,24 @@ async function loadFavorites() {
     document.getElementById('fav-count').textContent = `${total} guardados`;
 
     if (!total) {
-      container.innerHTML = `<div class="empty-state"><span class="empty-icon">⭐</span>Aún no tienes favoritos.<br>Usa la extensión para guardar nichos prometedores.</div>`;
-      if (!isPro) {
-        addLockedOverlay('fav-section',
-          'Tus favoritos sincronizados en Pro',
-          'Con el plan Pro, guarda nichos ilimitados y accédelos desde cualquier dispositivo.'
-        );
-      }
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color:var(--muted)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div style="font-weight:700;color:var(--text);margin-bottom:6px">Sin favoritos todavía</div>
+        Usa la extensión para guardar nichos prometedores y acceder a ellos aquí.
+      </div>`;
+      if (!isPro) addLockedOverlay('fav-section', 'Tus favoritos sincronizados en Pro', 'Con el plan Pro, guarda nichos ilimitados y accédelos desde cualquier dispositivo.');
       return;
     }
 
-    // Free users: show max 2, blur the rest
     const visible = isPro ? data : data.slice(0, 2);
     const hidden  = isPro ? [] : data.slice(2);
 
     let html = `<div class="fav-grid">${visible.map(f => favCardHTML(f)).join('')}`;
     if (hidden.length) {
-      // Show blurred ghost cards so user sees there's more
       html += hidden.map(() => `
-        <div class="fav-card" style="filter:blur(5px);pointer-events:none;user-select:none;opacity:0.5">
-          <div class="fav-top"><div class="fav-query">████████████</div><div class="fav-score high">78</div></div>
-          <div class="fav-date">15 may 2026</div>
+        <div class="fav-card" style="filter:blur(5px);pointer-events:none;user-select:none;opacity:0.4">
+          <div class="fav-top"><div class="fav-query">████████████████</div><div class="fav-score high">78</div></div>
+          <div class="fav-bottom"><div class="fav-date">15 may 2026</div></div>
         </div>
       `).join('');
     }
@@ -535,13 +645,10 @@ async function loadFavorites() {
     container.innerHTML = html;
 
     if (!isPro && total > 2) {
-      addLockedOverlay('fav-section',
-        `Tienes ${total} favoritos guardados`,
-        `Solo puedes ver 2 con el plan Free. Actualiza a Pro para acceder a todos tus favoritos.`
-      );
+      addLockedOverlay('fav-section', `Tienes ${total} favoritos guardados`, `Solo puedes ver 2 con el plan Free. Actualiza a Pro para acceder a todos.`);
     }
   } catch {
-    container.innerHTML = `<div class="empty-state"><span class="empty-icon">⚠️</span>Error al cargar favoritos.</div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>Error al cargar favoritos.</div>`;
   }
 }
 
@@ -552,8 +659,10 @@ function favCardHTML(f) {
         <div class="fav-query">${escapeHtml(f.query)}</div>
         ${f.score ? `<div class="fav-score ${scoreClass(f.score)}">${f.score}</div>` : ''}
       </div>
-      <div class="fav-date">${formatDate(f.created_at)}</div>
-      <button class="btn-fav-del" onclick="deleteFavorite('${f.id}')">Eliminar</button>
+      <div class="fav-bottom">
+        <div class="fav-date">${formatDate(f.created_at)}</div>
+        <button class="btn-fav-del" onclick="deleteFavorite('${f.id}')">Eliminar</button>
+      </div>
     </div>
   `;
 }
@@ -566,25 +675,27 @@ async function loadHistory() {
     document.getElementById('history-count').textContent = `${total} registros`;
 
     if (!total) {
-      container.innerHTML = `<div class="empty-state"><span class="empty-icon">🕐</span>Tu historial aparecerá aquí cuando uses la extensión.</div>`;
+      container.innerHTML = `<div class="empty-state">
+        <div class="empty-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div style="font-weight:700;color:var(--text);margin-bottom:6px">Sin análisis todavía</div>
+        Tu historial aparecerá aquí cuando uses la extensión.
+      </div>`;
       return;
     }
 
-    // Free users: show only last 3, blur a preview of more
     const visible = isPro ? data : data.slice(0, 3);
     const hiddenCount = isPro ? 0 : Math.max(0, total - 3);
 
     let html = `<div class="history-list">${visible.map(item => historyItemHTML(item)).join('')}`;
     if (hiddenCount > 0) {
-      // Ghost blurred rows
       const ghosts = Math.min(hiddenCount, 4);
-      const ghostQueries = ['finanzas personales para jóvenes', 'minecraft tutorials 2025', 'recetas veganas fáciles', 'gaming setup barrato'];
+      const ghostQueries = ['finanzas personales para jóvenes', 'minecraft tutorials 2025', 'recetas veganas fáciles', 'gaming setup económico'];
       for (let i = 0; i < ghosts; i++) {
         html += `
-          <div class="history-item" style="filter:blur(5px);pointer-events:none;user-select:none;opacity:0.45">
-            <div class="h-icon niche">🔍</div>
+          <div class="history-item" style="filter:blur(5px);pointer-events:none;user-select:none;opacity:0.35">
+            <div class="h-icon niche"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
             <div class="h-query">${ghostQueries[i % ghostQueries.length]}</div>
-            <div class="h-meta"><span class="h-date">12 may 2026</span><span class="h-type">Nicho</span></div>
+            <div class="h-meta"><span>12 may 2026</span><br><span>Nicho</span></div>
           </div>
         `;
       }
@@ -593,25 +704,22 @@ async function loadHistory() {
     container.innerHTML = html;
 
     if (!isPro && hiddenCount > 0) {
-      addLockedOverlay('history-section',
-        `${hiddenCount} análisis bloqueados`,
-        `Con el plan Free solo ves los últimos 3. Actualiza a Pro para acceder a todo tu historial.`
-      );
+      addLockedOverlay('history-section', `${hiddenCount} análisis bloqueados`, `Con el plan Free solo ves los últimos 3. Actualiza a Pro para ver todo tu historial.`);
     }
   } catch {
-    container.innerHTML = `<div class="empty-state"><span class="empty-icon">⚠️</span>Error al cargar el historial.</div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>Error al cargar el historial.</div>`;
   }
 }
 
 function historyItemHTML(item) {
-  const t = typeIcons[item.type] || { emoji:'🔍', label: item.type, cls:'niche' };
+  const t = typeIcons[item.type] || typeIcons.niche;
   return `
     <div class="history-item">
-      <div class="h-icon ${t.cls}">${t.emoji}</div>
+      <div class="h-icon ${t.cls}">${t.svg}</div>
       <div class="h-query">${escapeHtml(item.query)}</div>
       <div class="h-meta">
-        <span class="h-date">${formatDate(item.created_at)}</span>
-        <span class="h-type" style="color:var(--muted)">${t.label}</span>
+        <span>${formatDate(item.created_at)}</span><br>
+        <span style="color:var(--muted)">${t.label}</span>
       </div>
     </div>
   `;
@@ -625,7 +733,6 @@ function showServerError(msg) {
   document.getElementById('step-code').style.display = 'none';
   document.getElementById('auth-sub').textContent = '';
   setMsg(msg || 'El servidor no está disponible. Intenta de nuevo en un momento.', 'error');
-  // Add retry button
   const existing = document.getElementById('retry-btn');
   if (!existing) {
     const btn = document.createElement('button');
@@ -634,7 +741,7 @@ function showServerError(msg) {
     btn.onclick = () => {
       btn.remove();
       document.getElementById('step-email').style.display = 'block';
-      document.getElementById('auth-sub').textContent = 'Ingresa tu email para ver tu historial, favoritos y estadísticas.';
+      document.getElementById('auth-sub').textContent = 'Ingresa tu email para ver tu historial, favoritos y estadísticas de uso.';
       setMsg('');
       if (token) showDashboard();
     };
@@ -649,17 +756,14 @@ async function showDashboard() {
   try {
     await loadStats();
   } catch (err) {
-    // If not a logout (401 clears token), show server error
     if (token) showServerError('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
     return;
   }
   await Promise.all([loadFavorites(), loadHistory()]);
 }
 
-// Auto-login
 if (token) showDashboard();
 
-// Enter key support
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   if (document.getElementById('step-email').style.display !== 'none') sendCode();
