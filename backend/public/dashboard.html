@@ -434,6 +434,7 @@ function logout() {
 async function apiFetch(path) {
   const res = await fetch(`${API}${path}`, { headers: {'Authorization': `Bearer ${token}`} });
   if (res.status === 401) { logout(); throw new Error('No autenticado'); }
+  if (!res.ok) throw new Error(`Error ${res.status}`);
   return res.json();
 }
 
@@ -616,11 +617,42 @@ function historyItemHTML(item) {
   `;
 }
 
+function showServerError(msg) {
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('dashboard-screen').style.display = 'none';
+  document.getElementById('btn-logout').style.display = 'none';
+  document.getElementById('step-email').style.display = 'none';
+  document.getElementById('step-code').style.display = 'none';
+  document.getElementById('auth-sub').textContent = '';
+  setMsg(msg || 'El servidor no está disponible. Intenta de nuevo en un momento.', 'error');
+  // Add retry button
+  const existing = document.getElementById('retry-btn');
+  if (!existing) {
+    const btn = document.createElement('button');
+    btn.id = 'retry-btn'; btn.className = 'btn-auth'; btn.style.marginTop = '16px';
+    btn.textContent = 'Reintentar';
+    btn.onclick = () => {
+      btn.remove();
+      document.getElementById('step-email').style.display = 'block';
+      document.getElementById('auth-sub').textContent = 'Ingresa tu email para ver tu historial, favoritos y estadísticas.';
+      setMsg('');
+      if (token) showDashboard();
+    };
+    document.getElementById('auth-msg').insertAdjacentElement('afterend', btn);
+  }
+}
+
 async function showDashboard() {
   document.getElementById('auth-screen').style.display  = 'none';
   document.getElementById('dashboard-screen').style.display = 'block';
   document.getElementById('btn-logout').style.display   = 'inline-block';
-  await loadStats();
+  try {
+    await loadStats();
+  } catch (err) {
+    // If not a logout (401 clears token), show server error
+    if (token) showServerError('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
+    return;
+  }
   await Promise.all([loadFavorites(), loadHistory()]);
 }
 

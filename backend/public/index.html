@@ -235,9 +235,16 @@
 
     /* ── Pricing ── */
     .pricing-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px; margin-top: 48px; max-width: 800px; margin-left: auto; margin-right: auto;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px; margin-top: 48px; max-width: 1040px; margin-left: auto; margin-right: auto;
     }
+    .price-card.annual { border-color: var(--green); }
+    .annual-tag {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--green); color: #052e16;
+      padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+    }
+    .price-amount-cross { font-size: 16px; color: #9ca3af; text-decoration: line-through; margin-right: 6px; }
     .price-card {
       border: 1px solid #e2e8f0; border-radius: 20px; padding: 32px;
       background: white; position: relative;
@@ -547,8 +554,26 @@
         </ul>
         <a href="#" class="btn-price btn-price-pro">Empezar Pro →</a>
       </div>
+      <div class="price-card annual">
+        <div class="annual-tag">Ahorra 36%</div>
+        <div class="price-plan">Pro Anual</div>
+        <div class="price-amount">
+          <span class="price-amount-cross">$108</span>$69<span>/año</span>
+        </div>
+        <div class="price-desc">Todas las funciones Pro pagando una vez al año. Equivale a solo $5.75/mes.</div>
+        <ul class="price-features">
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Todo lo incluido en Pro</li>
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Análisis ilimitados</li>
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Dashboard con historial completo</li>
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Favoritos sincronizados</li>
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Exportación CSV</li>
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Soporte prioritario</li>
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Nuevas funciones incluidas</li>
+          <li><span class="pf-check" style="color:var(--green)">✓</span> Sin renovación automática</li>
+        </ul>
+        <a href="#" class="btn-price" style="background:var(--green);color:#052e16">Empezar Plan Anual →</a>
+      </div>
     </div>
-    <p style="font-size:13px;color:#9ca3af;margin-top:20px">También disponible plan anual con 36% de descuento ($69/año)</p>
   </div>
 </section>
 
