@@ -45,8 +45,8 @@ initDB().catch(console.error);
 const YT_KEY              = process.env.YOUTUBE_API_KEY;
 const LS_KEY              = process.env.LEMON_SQUEEZY_API_KEY;
 const LS_WEBHOOK_SECRET   = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
-const LS_VARIANT_MONTHLY  = '1714199';
-const LS_VARIANT_ANNUAL   = '1714217';
+const LS_CHECKOUT_MONTHLY = 'https://getamalify.lemonsqueezy.com/checkout/buy/3e0d19eb-c93c-4938-827e-a686bd02faea';
+const LS_CHECKOUT_ANNUAL  = 'https://getamalify.lemonsqueezy.com/checkout/buy/a230580e-dbef-405e-bd9b-9bc5ab19c474';
 const RESEND_KEY          = process.env.RESEND_API_KEY;
 const BASE = 'https://www.googleapis.com/youtube/v3';
 
@@ -727,10 +727,9 @@ app.post('/api/webhooks/lemonsqueezy', express.raw({ type: 'application/json' })
 
 // ── Checkout URL ──────────────────────────────────────────
 app.get('/api/checkout/:plan', async (req, res) => {
-  const variantId = req.params.plan === 'annual' ? LS_VARIANT_ANNUAL : LS_VARIANT_MONTHLY;
-  const userData  = await getRegisteredUser(req).catch(() => null);
-  const base      = `https://app.lemonsqueezy.com/checkout/buy/${variantId}`;
-  const url       = userData?.email
+  const base     = req.params.plan === 'annual' ? LS_CHECKOUT_ANNUAL : LS_CHECKOUT_MONTHLY;
+  const userData = await getRegisteredUser(req).catch(() => null);
+  const url      = userData?.email
     ? `${base}?checkout[email]=${encodeURIComponent(userData.email)}`
     : base;
   res.json({ url });
