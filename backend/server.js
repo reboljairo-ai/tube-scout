@@ -248,15 +248,15 @@ app.post('/api/auth/request-code', async (req, res) => {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'TubeScout <hello@tubescout.io>',
+        from: 'TubeScout <onboarding@resend.dev>',
         to: email,
         subject: 'Tu código de acceso — TubeScout',
-        html: `<div style="font-family:sans-serif;max-width:420px;padding:32px;background:#0F1117;border-radius:12px"><h2 style="color:#6C63FF">🎯 TubeScout</h2><p style="color:#94A3B8;margin-bottom:20px">Tu código de verificación:</p><div style="font-size:36px;font-weight:800;letter-spacing:10px;color:#E2E8F0;padding:20px;background:#1A1D2E;border-radius:8px;text-align:center">${code}</div><p style="color:#64748b;font-size:13px;margin-top:16px">Expira en 15 minutos.</p></div>`
+        html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#080910;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans',sans-serif"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:48px 24px"><table width="480" cellpadding="0" cellspacing="0" style="background:#0E1020;border-radius:16px;border:1px solid rgba(255,255,255,0.07);overflow:hidden"><tr><td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07)"><span style="font-size:18px;font-weight:800;color:#EDF0FF;letter-spacing:-0.02em">&#9678; TubeScout</span></td></tr><tr><td style="padding:36px 40px"><p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">Tu código de acceso</p><p style="margin:0 0 28px;font-size:15px;color:#8892B0;line-height:1.6">Ingresa este código en el dashboard para acceder a tu cuenta.</p><div style="background:#141729;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px"><span style="font-size:42px;font-weight:800;letter-spacing:14px;color:#EDF0FF">${code}</span></div><p style="margin:0;font-size:13px;color:#5A6380;line-height:1.6">Este código expira en <strong style="color:#8892B0">15 minutos</strong>. Si no solicitaste este código, podés ignorar este email.</p></td></tr><tr><td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.07)"><p style="margin:0;font-size:12px;color:#5A6380">© 2026 TubeScout · No afiliado a YouTube ni a Google.</p></td></tr></table></td></tr></table></body></html>`
       })
     });
   }
   console.log(`[DEV] Code for ${email}: ${code}`);
-  res.json({ success: true, devCode: code });
+  res.json({ success: true, ...(RESEND_KEY ? {} : { devCode: code }) });
 });
 
 app.post('/api/auth/verify-code', async (req, res) => {
