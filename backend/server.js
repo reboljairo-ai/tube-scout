@@ -42,9 +42,12 @@ async function initDB() {
 }
 initDB().catch(console.error);
 
-const YT_KEY = process.env.YOUTUBE_API_KEY;
-const LS_KEY = process.env.LEMON_SQUEEZY_API_KEY;
-const RESEND_KEY = process.env.RESEND_API_KEY;
+const YT_KEY              = process.env.YOUTUBE_API_KEY;
+const LS_KEY              = process.env.LEMON_SQUEEZY_API_KEY;
+const LS_WEBHOOK_SECRET   = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
+const LS_VARIANT_MONTHLY  = '1714199';
+const LS_VARIANT_ANNUAL   = '1714217';
+const RESEND_KEY          = process.env.RESEND_API_KEY;
 const BASE = 'https://www.googleapis.com/youtube/v3';
 
 const CPM_MAP = [
@@ -278,7 +281,7 @@ app.post('/api/auth/verify-code', async (req, res) => {
     'INSERT INTO auth_tokens (token, user_id, daily_count, last_reset) VALUES ($1, $2, 0, $3)',
     [token, rows[0].id, today]
   );
-  res.json({ success: true, token });
+  res.json({ success: true, accessToken: token });
 });
 
 // ── Niche Analyzer ────────────────────────────────────────
@@ -687,23 +690,50 @@ app.delete('/api/favorites/:id', async (req, res) => {
   }
 });
 
-// ── License Validation ────────────────────────────────────
-app.post('/api/license/validate', async (req, res) => {
+// ── Lemon Squeezy Webhook ─────────────────────────────────
+app.post('/api/webhooks/lemonsqueezy', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
-    const { licenseKey } = req.body;
-    const lsRes = await fetch('https://api.lemonsqueezy.com/v1/licenses/validate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ license_key: licenseKey })
-    });
-    const data = await lsRes.json();
-    res.json({ valid: !!data.valid, error: data.error });
-  } catch {
-    res.status(500).json({ valid: false, error: 'Error al verificar la licencia.' });
+    if (LS_WEBHOOK_SECRET) {
+      const sig  = req.headers['x-signature'];
+      const hash = crypto.createHmac('sha256', LS_WEBHOOK_SECRET).update(req.body).digest('hex');
+      if (sig !== hash) return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const payload = JSON.parse(req.body.toString());
+    const event   = payload.meta?.event_name;
+    const attrs   = payload.data?.attributes;
+    const email   = attrs?.user_email;
+
+    if (!email) return res.json({ ok: true });
+
+    if (['subscription_created', 'subscription_updated'].includes(event)) {
+      if (['active', 'trialing'].includes(attrs?.status)) {
+        await db.query('UPDATE users SET is_pro = true WHERE LOWER(email) = LOWER($1)', [email]);
+        console.log(`[LS] Pro activado: ${email}`);
+      }
+    }
+
+    if (['subscription_expired', 'subscription_cancelled'].includes(event)) {
+      await db.query('UPDATE users SET is_pro = false WHERE LOWER(email) = LOWER($1)', [email]);
+      console.log(`[LS] Pro removido: ${email}`);
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[LS webhook]', err.message);
+    res.status(500).json({ error: 'Webhook error' });
   }
+});
+
+// ── Checkout URL ──────────────────────────────────────────
+app.get('/api/checkout/:plan', async (req, res) => {
+  const variantId = req.params.plan === 'annual' ? LS_VARIANT_ANNUAL : LS_VARIANT_MONTHLY;
+  const userData  = await getRegisteredUser(req).catch(() => null);
+  const base      = `https://app.lemonsqueezy.com/checkout/buy/${variantId}`;
+  const url       = userData?.email
+    ? `${base}?checkout[email]=${encodeURIComponent(userData.email)}`
+    : base;
+  res.json({ url });
 });
 
 const PORT = process.env.PORT || 3001;
