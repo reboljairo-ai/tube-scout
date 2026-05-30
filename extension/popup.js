@@ -257,6 +257,7 @@ async function analyzeNiche() {
 
   $('niche-results').innerHTML = loadingHTML(`Analizando "${query}"…`);
   $('niche-btn').disabled = true;
+  $('niche-history').style.display = 'none';
 
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'analyzeNiche', query });
@@ -266,6 +267,7 @@ async function analyzeNiche() {
     renderHistory('niche-history', 'nicheHistory');
   } catch (err) {
     $('niche-results').innerHTML = errorHTML(err.message);
+    $('niche-history').style.display = '';
   } finally {
     $('niche-btn').disabled = false;
   }
@@ -306,6 +308,7 @@ async function renderNicheResults(query, data) {
 
   const ringDeg = Math.round(score * 3.6);
   $('niche-results').innerHTML = `
+    <button class="btn-back-history" id="btn-back-niche">← Búsquedas recientes</button>
     <div class="score-card ${scoreClass}">
       <div class="score-ring" style="background:conic-gradient(${barColor} ${ringDeg}deg,#252525 ${ringDeg}deg)">
         <div class="score-num">${score}</div>
@@ -668,6 +671,12 @@ document.addEventListener('click', async e => {
       copyBtn.classList.add('copied');
       setTimeout(() => { copyBtn.textContent = orig; copyBtn.classList.remove('copied'); }, 1500);
     });
+    return;
+  }
+
+  if (e.target.id === 'btn-back-niche') {
+    $('niche-results').innerHTML = '';
+    $('niche-history').style.display = '';
     return;
   }
 
