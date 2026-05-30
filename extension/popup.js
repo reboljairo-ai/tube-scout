@@ -1,6 +1,8 @@
 const $ = id => document.getElementById(id);
 const FREE_LIMIT = 20;
 
+const stripEmoji = s => s.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
+
 // ── Tab switching ─────────────────────────────────────────
 let trendingLoaded = false;
 document.querySelectorAll('.tab').forEach(tab => {
@@ -302,12 +304,14 @@ async function renderNicheResults(query, data) {
       </div>` : ''}
     </div>` : '';
 
+  const ringDeg = Math.round(score * 3.6);
   $('niche-results').innerHTML = `
     <div class="score-card ${scoreClass}">
-      <div class="score-num">${score}</div>
+      <div class="score-ring" style="background:conic-gradient(${barColor} ${ringDeg}deg,#252525 ${ringDeg}deg)">
+        <div class="score-num">${score}</div>
+      </div>
       <div class="score-info">
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${score}%;background:${barColor}"></div></div>
-        <h3>${scoreLabel}</h3>
+        <div class="score-sublabel">${scoreLabel}</div>
         <p>${scoreDesc}</p>
       </div>
       <button class="fav-btn ${isSaved ? 'saved' : ''}" id="fav-btn" data-fav-query="${query.replace(/"/g,'&quot;')}" data-fav-score="${score}">
@@ -316,15 +320,15 @@ async function renderNicheResults(query, data) {
     </div>
     ${incomeHTML}
     <div class="stats-row">
-      <div class="stat-card">
+      <div class="stat-card" style="--stat-accent:#00C896">
         <div class="stat-value">${fmtNum(stats.avgViews)}</div>
         <div class="stat-label">Views prom.</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" style="--stat-accent:#F5A623">
         <div class="stat-value">${stats.avgEngagement}%</div>
         <div class="stat-label">Engagement</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" style="--stat-accent:#6C8EF5">
         <div class="stat-value">${fmtNum(stats.avgSubs)}</div>
         <div class="stat-label">Subs prom.</div>
       </div>
@@ -566,7 +570,7 @@ function videoItemHTML(v, rank) {
     <div class="video-item">
       <div class="video-rank">#${rank}</div>
       <div class="video-info">
-        <div class="video-title">${v.title}</div>
+        <div class="video-title">${stripEmoji(v.title)}</div>
         <div class="video-meta">
           <span class="meta-tag">${fmtNum(v.views)} views</span>
           <span class="meta-tag ${engClass}">${v.engagementRate}% eng</span>
