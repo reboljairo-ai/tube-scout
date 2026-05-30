@@ -330,6 +330,15 @@
     </div>
 
     <div class="auth-msg" id="auth-msg"></div>
+
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+      <button onclick="toggleTokenLogin()" id="btn-toggle-token" style="background:none;border:none;color:var(--muted2);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit">¿Tenés tu token de acceso? Entrar directamente</button>
+      <div id="step-token" style="display:none;margin-top:12px">
+        <label class="auth-label">Token de acceso</label>
+        <input type="text" class="auth-input" id="input-token" placeholder="Pega tu token aquí…" style="font-size:12px;letter-spacing:0.02em" />
+        <button class="btn-auth" onclick="loginWithToken()">Entrar con token</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -448,7 +457,7 @@
     <div style="text-align:center;margin-top:28px">
       <a href="/#pricing" class="btn-unlock">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Desbloquear todo con Pro — $9/mes
+        Desbloquear todo con Pro — $4.99/mes
       </a>
     </div>
   </div>
@@ -520,6 +529,25 @@ async function verifyCode() {
     }
   } catch { setMsg('Error de conexión.', 'error'); }
   setBtn('btn-verify-code', false, 'Verificar y entrar');
+}
+
+function toggleTokenLogin() {
+  const el = document.getElementById('step-token');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function loginWithToken() {
+  const t = document.getElementById('input-token').value.trim();
+  if (!t || t.length < 20) return setMsg('Token inválido.', 'error');
+  localStorage.setItem('ts_token', t);
+  token = t;
+  try {
+    await showDashboard();
+  } catch {
+    localStorage.removeItem('ts_token');
+    token = null;
+    setMsg('Token incorrecto o expirado.', 'error');
+  }
 }
 
 function backToEmail() {
