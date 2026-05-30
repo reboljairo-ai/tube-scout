@@ -332,11 +332,11 @@
     <div class="auth-msg" id="auth-msg"></div>
 
     <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
-      <button onclick="toggleTokenLogin()" id="btn-toggle-token" style="background:none;border:none;color:var(--muted2);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit">¿Tenés tu token de acceso? Entrar directamente</button>
+      <button onclick="toggleTokenLogin()" id="btn-toggle-token" style="background:none;border:none;color:var(--muted2);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit">Acceso de administrador</button>
       <div id="step-token" style="display:none;margin-top:12px">
-        <label class="auth-label">Token de acceso</label>
-        <input type="text" class="auth-input" id="input-token" placeholder="Pega tu token aquí…" style="font-size:12px;letter-spacing:0.02em" />
-        <button class="btn-auth" onclick="loginWithToken()">Entrar con token</button>
+        <label class="auth-label">Contraseña de administrador</label>
+        <input type="password" class="auth-input" id="input-token" placeholder="Contraseña…" />
+        <button class="btn-auth" onclick="loginWithToken()">Entrar</button>
       </div>
     </div>
   </div>
@@ -537,17 +537,21 @@ function toggleTokenLogin() {
 }
 
 async function loginWithToken() {
-  const t = document.getElementById('input-token').value.trim();
-  if (!t || t.length < 20) return setMsg('Token inválido.', 'error');
-  localStorage.setItem('ts_token', t);
-  token = t;
+  const pwd = document.getElementById('input-token').value.trim();
+  if (!pwd) return setMsg('Ingresa la contraseña.', 'error');
   try {
-    await showDashboard();
-  } catch {
-    localStorage.removeItem('ts_token');
-    token = null;
-    setMsg('Token incorrecto o expirado.', 'error');
-  }
+    const res  = await fetch(`${API}/api/auth/admin-login`, {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (data.accessToken) {
+      localStorage.setItem('ts_token', data.accessToken);
+      token = data.accessToken;
+      showDashboard();
+    } else {
+      setMsg(data.error || 'Contraseña incorrecta.', 'error');
+    }
+  } catch { setMsg('Error de conexión.', 'error'); }
 }
 
 function backToEmail() {

@@ -725,6 +725,32 @@ app.post('/api/webhooks/lemonsqueezy', express.raw({ type: 'application/json' })
   }
 });
 
+// ── Admin Login ───────────────────────────────────────────
+app.post('/api/auth/admin-login', async (req, res) => {
+  try {
+    const { password } = req.body;
+    const masterPwd  = process.env.MASTER_PASSWORD;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!masterPwd || !adminEmail) return res.status(503).json({ error: 'No configurado' });
+    if (password !== masterPwd) return res.status(401).json({ error: 'Contraseña incorrecta' });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const today = new Date().toDateString();
+    const { rows } = await db.query(
+      'INSERT INTO users (email, is_pro) VALUES ($1, true) ON CONFLICT (email) DO UPDATE SET is_pro = true RETURNING id',
+      [adminEmail.toLowerCase()]
+    );
+    await db.query(
+      'INSERT INTO auth_tokens (token, user_id, daily_count, last_reset) VALUES ($1, $2, 0, $3)',
+      [token, rows[0].id, today]
+    );
+    res.json({ accessToken: token });
+  } catch (err) {
+    console.error('admin-login error:', err.message);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
 // ── Checkout URL ──────────────────────────────────────────
 app.get('/api/checkout/:plan', async (req, res) => {
   const base     = req.params.plan === 'annual' ? LS_CHECKOUT_ANNUAL : LS_CHECKOUT_MONTHLY;
