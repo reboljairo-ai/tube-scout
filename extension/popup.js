@@ -445,6 +445,7 @@ async function searchKeywords() {
 
   $('kw-results').innerHTML = loadingHTML(`Buscando keywords para "${query}"…`);
   $('kw-btn').disabled = true;
+  $('kw-history').style.display = 'none';
 
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'searchKeywords', query });
@@ -455,6 +456,7 @@ async function searchKeywords() {
     loadTags(query);
   } catch (err) {
     $('kw-results').innerHTML = errorHTML(err.message);
+    $('kw-history').style.display = '';
   } finally {
     $('kw-btn').disabled = false;
   }
@@ -492,10 +494,12 @@ function renderKeywordResults(data) {
           </div>
         </div>
         <div class="kw-score" style="color:${scoreColor}">${kw.score}</div>
+        <a class="btn-open-tab" href="https://www.youtube.com/results?search_query=${encodeURIComponent(kw.keyword)}" target="_blank" title="Buscar en YouTube"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
       </div>`;
   }).join('');
 
   $('kw-results').innerHTML = `
+    <button class="btn-back-history" id="btn-back-kw">← Búsquedas recientes</button>
     ${topicBadge}
     <div class="section-title" style="margin-bottom:10px">Keywords — click para analizar nicho</div>
     ${html}
@@ -569,6 +573,7 @@ function videoItemHTML(v, rank) {
   const scoreBg = v.viralScore >= 70 ? 'rgba(0,200,150,0.1)' : v.viralScore >= 40 ? 'rgba(245,166,35,0.1)' : 'rgba(122,122,122,0.1)';
   const fmtLabel = v.format === 'short' ? 'Short' : v.format === 'medium' ? 'Medio' : 'Largo';
   const fmtClass = v.format || 'long';
+  const ytUrl = v.videoId ? `https://www.youtube.com/watch?v=${v.videoId}` : '';
   return `
     <div class="video-item">
       <div class="video-rank">#${rank}</div>
@@ -583,6 +588,7 @@ function videoItemHTML(v, rank) {
         </div>
       </div>
       <div class="score-pill" style="background:${scoreBg};color:${scoreColor}">${v.viralScore}</div>
+      ${ytUrl ? `<a class="btn-open-tab" href="${ytUrl}" target="_blank" title="Abrir en nueva pestaña"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>` : ''}
     </div>`;
 }
 
@@ -677,6 +683,12 @@ document.addEventListener('click', async e => {
   if (e.target.id === 'btn-back-niche') {
     $('niche-results').innerHTML = '';
     $('niche-history').style.display = '';
+    return;
+  }
+
+  if (e.target.id === 'btn-back-kw') {
+    $('kw-results').innerHTML = '';
+    $('kw-history').style.display = '';
     return;
   }
 

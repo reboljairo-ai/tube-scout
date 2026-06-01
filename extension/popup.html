@@ -149,6 +149,15 @@
     }
     .btn-back-history:hover { color: var(--accent); }
 
+    /* Open in new tab */
+    .btn-open-tab {
+      display: flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0;
+      color: var(--muted); text-decoration: none;
+      background: none; transition: all 0.15s;
+    }
+    .btn-open-tab:hover { color: var(--accent); background: rgba(0,200,150,0.08); }
+
     /* Section title */
     .section-title {
       font-size: 10px; font-weight: 700; color: var(--muted);
@@ -159,7 +168,7 @@
     .video-item {
       background: var(--card); border: 1px solid var(--border);
       border-radius: 6px; padding: 10px 12px; margin-bottom: 5px;
-      display: flex; gap: 10px; align-items: flex-start;
+      display: flex; gap: 10px; align-items: center;
     }
     .video-item:hover { border-color: #3A3A3A; }
     .video-rank { font-size: 11px; font-weight: 700; color: var(--muted); min-width: 18px; padding-top: 2px; }
