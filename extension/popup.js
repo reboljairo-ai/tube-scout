@@ -251,6 +251,10 @@ $('niche-input').addEventListener('keydown', e => { if (e.key === 'Enter') analy
 async function analyzeNiche() {
   const query = $('niche-input').value.trim();
   if (!query) return;
+  if (isURL(query)) {
+    $('niche-results').innerHTML = `<div class="error-msg">Ingresá un tema o keyword, no una URL.<br><small style="color:var(--muted)">Para analizar un canal usá la pestaña Canal.</small></div>`;
+    return;
+  }
 
   const ok = await checkAndIncrementUsage();
   if (!ok) { $('niche-results').innerHTML = limitHTML(); return; }
@@ -436,9 +440,17 @@ function renderChannelResults(data) {
 $('kw-btn').addEventListener('click', searchKeywords);
 $('kw-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchKeywords(); });
 
+function isURL(str) {
+  return /^https?:\/\//i.test(str) || /^www\./i.test(str) || str.includes('youtube.com');
+}
+
 async function searchKeywords() {
   const query = $('kw-input').value.trim();
   if (!query) return;
+  if (isURL(query)) {
+    $('kw-results').innerHTML = `<div class="error-msg">Ingresá un tema o keyword, no una URL.<br><small style="color:var(--muted)">Para analizar un canal usá la pestaña Canal.</small></div>`;
+    return;
+  }
 
   const ok = await checkAndIncrementUsage();
   if (!ok) { $('kw-results').innerHTML = limitHTML(); return; }
