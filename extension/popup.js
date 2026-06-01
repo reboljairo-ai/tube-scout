@@ -35,6 +35,7 @@ async function init() {
   }
   renderHistory('niche-history', 'nicheHistory');
   renderHistory('kw-history', 'kwHistory');
+  renderHistory('viral-history', 'viralHistory');
   renderFavorites();
   const { pendingModalStep } = await chrome.storage.local.get('pendingModalStep');
   if (pendingModalStep) openModal(pendingModalStep);
@@ -365,8 +366,49 @@ document.querySelectorAll('[data-region]').forEach(btn => {
   });
 });
 
+// ── Viral search ──────────────────────────────────────────
+$('viral-btn').addEventListener('click', searchViral);
+$('viral-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchViral(); });
+
+async function searchViral() {
+  const query = $('viral-input').value.trim();
+  if (!query) { loadTrending(); return; }
+  if (isURL(query)) {
+    $('trending-results').innerHTML = `<div class="error-msg">Ingresá un tema, no una URL.</div>`;
+    return;
+  }
+  $('trending-results').innerHTML = loadingHTML(`Buscando videos virales de "${query}"…`);
+  $('viral-btn').disabled = true;
+  $('viral-history').style.display = 'none';
+  $('viral-filters').style.display = 'none';
+  $('viral-region-filters').style.display = 'none';
+
+  try {
+    const resp = await chrome.runtime.sendMessage({ action: 'analyzeNiche', query });
+    if (resp.error) throw new Error(resp.error);
+    const videos = resp.data?.videos || [];
+    if (!videos.length) throw new Error('No se encontraron videos.');
+    $('trending-results').innerHTML = `
+      <button class="btn-back-history" id="btn-back-viral">← Búsquedas recientes</button>
+      <div class="section-title" style="margin-bottom:8px">Videos virales — ${query}</div>
+      ${videos.map((v, i) => videoItemHTML(v, i + 1)).join('')}
+    `;
+    await saveToHistory('viralHistory', query);
+    renderHistory('viral-history', 'viralHistory');
+  } catch (err) {
+    $('trending-results').innerHTML = errorHTML(err.message);
+    $('viral-history').style.display = '';
+    $('viral-filters').style.display = '';
+    $('viral-region-filters').style.display = '';
+  } finally {
+    $('viral-btn').disabled = false;
+  }
+}
+
 async function loadTrending() {
   $('trending-results').innerHTML = loadingHTML('Cargando tendencias…');
+  $('viral-filters').style.display = '';
+  $('viral-region-filters').style.display = '';
   try {
     const resp = await chrome.runtime.sendMessage({
       action: 'getTrending',
@@ -659,6 +701,9 @@ document.addEventListener('click', async e => {
     } else if (containerId === 'kw-history') {
       $('kw-input').value = query;
       searchKeywords();
+    } else if (containerId === 'viral-history') {
+      $('viral-input').value = query;
+      searchViral();
     }
     return;
   }
@@ -701,6 +746,15 @@ document.addEventListener('click', async e => {
   if (e.target.id === 'btn-back-kw') {
     $('kw-results').innerHTML = '';
     $('kw-history').style.display = '';
+    return;
+  }
+
+  if (e.target.id === 'btn-back-viral') {
+    $('viral-input').value = '';
+    $('viral-history').style.display = '';
+    $('viral-filters').style.display = '';
+    $('viral-region-filters').style.display = '';
+    loadTrending();
     return;
   }
 

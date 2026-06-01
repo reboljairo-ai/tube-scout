@@ -494,7 +494,12 @@
 
   <!-- TRENDING TAB -->
   <div class="panel" id="panel-trending">
-    <div class="filter-row">
+    <div class="search-wrap">
+      <input type="text" id="viral-input" class="search-input" placeholder="ej: personal finance, gaming, fitness…">
+      <button id="viral-btn" class="search-btn">Buscar</button>
+    </div>
+    <div id="viral-history"></div>
+    <div class="filter-row" id="viral-filters">
       <button class="filter-chip active" data-cat="0">Todo</button>
       <button class="filter-chip" data-cat="28">Tech</button>
       <button class="filter-chip" data-cat="20">Gaming</button>
@@ -502,7 +507,7 @@
       <button class="filter-chip" data-cat="24">Entertainment</button>
       <button class="filter-chip" data-cat="26">How-to</button>
     </div>
-    <div class="filter-row">
+    <div class="filter-row" id="viral-region-filters">
       <button class="filter-chip active" data-region="US">US</button>
       <button class="filter-chip" data-region="ES">ES</button>
       <button class="filter-chip" data-region="MX">MX</button>
