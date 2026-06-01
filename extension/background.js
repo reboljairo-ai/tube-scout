@@ -20,6 +20,13 @@ chrome.action.onClicked.addListener((tab) => {
   }
 });
 
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  // If this tab never had the panel explicitly opened, disable it
+  if (!tabPanelState.get(tabId)) {
+    chrome.sidePanel.setOptions({ tabId, enabled: false }).catch(() => {});
+  }
+});
+
 chrome.tabs.onRemoved.addListener(tabId => {
   tabPanelState.delete(tabId);
   chrome.sidePanel.setOptions({ tabId, enabled: false }).catch(() => {});
