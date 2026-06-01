@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const path = require('path');
 const { Pool } = require('pg');
 const app = express();
 
@@ -192,7 +193,7 @@ app.use(cors({
 }));
 app.options('*', cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Helpers ───────────────────────────────────────────────
 async function ytFetch(path) {
