@@ -285,6 +285,24 @@ app.post('/api/auth/verify-code', async (req, res) => {
   res.json({ success: true, accessToken: token });
 });
 
+// ── Email Lead Capture ────────────────────────────────────
+app.post('/api/register-email', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Email inválido' });
+  }
+  try {
+    await db.query(
+      'INSERT INTO users (email) VALUES ($1) ON CONFLICT (email) DO NOTHING',
+      [email.toLowerCase().trim()]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    console.error('register-email error:', e.message);
+    res.status(500).json({ error: 'Error al registrar el email' });
+  }
+});
+
 // ── Niche Analyzer ────────────────────────────────────────
 app.post('/api/analyze/niche', async (req, res) => {
   try {
