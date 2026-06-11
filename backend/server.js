@@ -46,8 +46,8 @@ initDB().catch(console.error);
 const YT_KEY              = process.env.YOUTUBE_API_KEY;
 const LS_KEY              = process.env.LEMON_SQUEEZY_API_KEY;
 const LS_WEBHOOK_SECRET   = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
-const LS_CHECKOUT_MONTHLY = 'https://tubescoutt.lemonsqueezy.com/checkout/buy/1ff3c34e-6db9-431a-9114-5b2263b097de';
-const LS_CHECKOUT_ANNUAL  = 'https://tubescoutt.lemonsqueezy.com/checkout/buy/3fefc3e5-ace8-4f65-a060-7401f128740e';
+const LS_CHECKOUT_MONTHLY = 'https://tubescoutt.lemonsqueezy.com/checkout/buy/c9bd902c-3d7c-4650-97ac-1a8fba1fbc4a';
+const LS_CHECKOUT_ANNUAL  = 'https://tubescoutt.lemonsqueezy.com/checkout/buy/1e10949e-e053-48f4-b3b8-1ddb1c9d5d42';
 const RESEND_KEY          = process.env.RESEND_API_KEY;
 const BASE = 'https://www.googleapis.com/youtube/v3';
 
