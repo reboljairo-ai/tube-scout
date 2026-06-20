@@ -264,7 +264,7 @@ async function analyzeNiche() {
   }
 
   const ok = await checkAndIncrementUsage();
-  if (!ok) { $('niche-results').innerHTML = limitHTML(); return; }
+  if (!ok) { $('niche-results').innerHTML = await limitHTML(); return; }
 
   $('niche-results').innerHTML = loadingHTML(t(`Analizando "${query}"…`, `Analyzing "${query}"…`));
   $('niche-btn').disabled = true;
@@ -388,7 +388,7 @@ async function searchViral() {
     return;
   }
   const ok = await checkAndIncrementUsage();
-  if (!ok) { $('trending-results').innerHTML = limitHTML(); return; }
+  if (!ok) { $('trending-results').innerHTML = await limitHTML(); return; }
   $('trending-results').innerHTML = loadingHTML(t(`Buscando videos virales de "${query}"…`, `Searching viral videos for "${query}"…`));
   $('viral-btn').disabled = true;
   $('viral-history').style.display = 'none';
@@ -443,7 +443,7 @@ async function analyzeChannel() {
   if (!input) return;
 
   const ok = await checkAndIncrementUsage();
-  if (!ok) { $('channel-results').innerHTML = limitHTML(); return; }
+  if (!ok) { $('channel-results').innerHTML = await limitHTML(); return; }
 
   $('channel-results').innerHTML = loadingHTML(t('Analizando canal…', 'Analyzing channel…'));
   $('channel-btn').disabled = true;
@@ -507,7 +507,7 @@ async function searchKeywords() {
   }
 
   const ok = await checkAndIncrementUsage();
-  if (!ok) { $('kw-results').innerHTML = limitHTML(); return; }
+  if (!ok) { $('kw-results').innerHTML = await limitHTML(); return; }
 
   $('kw-results').innerHTML = loadingHTML(t(`Buscando keywords para "${query}"…`, `Searching keywords for "${query}"…`));
   $('kw-btn').disabled = true;
@@ -682,12 +682,21 @@ function errorHTML(msg) {
   return `<div class="empty-state"><p>${msg}</p></div>`;
 }
 
-function limitHTML() {
+async function limitHTML() {
+  const { emailRegistered } = await chrome.storage.local.get('emailRegistered');
+  if (!emailRegistered) {
+    return `
+      <div class="empty-state">
+        <p>${t('Llegaste al límite de análisis gratuitos.', 'You reached the free analysis limit.')}</p>
+        <button onclick="window.openModal()" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('📧 Registrate gratis → 10 análisis/día', '📧 Register free → 10 analyses/day')}</button>
+        <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('o', 'or')} <span class="js-upgrade" style="cursor:pointer;color:var(--accent)">${t('actualiza a Pro para ilimitados', 'upgrade to Pro for unlimited')}</span></p>
+      </div>`;
+  }
   return `
     <div class="empty-state">
-      <p>${t('Llegaste al límite de análisis gratuitos.', 'You reached the free analysis limit.')}</p>
-      <button onclick="window.openModal()" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('📧 Registrate gratis → 10 análisis/día', '📧 Register free → 10 analyses/day')}</button>
-      <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('o', 'or')} <span class="js-upgrade" style="cursor:pointer;color:var(--accent)">${t('actualiza a Pro para ilimitados', 'upgrade to Pro for unlimited')}</span></p>
+      <p>${t('Llegaste al límite diario de 10 análisis.', 'You reached your daily limit of 10 analyses.')}</p>
+      <button class="js-upgrade" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('⚡ Actualiza a Pro → Ilimitados', '⚡ Upgrade to Pro → Unlimited')}</button>
+      <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('El límite se resetea a medianoche.', 'Limit resets at midnight.')}</p>
     </div>`;
 }
 
