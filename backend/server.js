@@ -292,11 +292,24 @@ app.post('/api/register-email', async (req, res) => {
     return res.status(400).json({ error: 'Email inválido' });
   }
   try {
-    await db.query(
+    const { rowCount } = await db.query(
       'INSERT INTO users (email) VALUES ($1) ON CONFLICT (email) DO NOTHING',
       [email.toLowerCase().trim()]
     );
     res.json({ success: true });
+
+    if (RESEND_KEY && rowCount > 0) {
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'TubeScout <onboarding@resend.dev>',
+          to: email,
+          subject: '🎯 10 análisis/día activados — Bienvenido a TubeScout',
+          html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#080910;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans',sans-serif"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:48px 24px"><table width="480" cellpadding="0" cellspacing="0" style="background:#0E1020;border-radius:16px;border:1px solid rgba(255,255,255,0.07);overflow:hidden"><tr><td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07)"><span style="font-size:18px;font-weight:800;color:#EDF0FF;letter-spacing:-0.02em">&#9678; TubeScout</span></td></tr><tr><td style="padding:36px 40px"><p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">¡Ya estás dentro!</p><p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Tu cuenta gratuita está activa. Ahora tenés <strong style="color:#EDF0FF">10 análisis por día</strong> disponibles en la extensión.</p><div style="background:#141729;border:1px solid rgba(0,200,150,0.2);border-radius:12px;padding:20px 24px;margin-bottom:24px"><p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#00C896;text-transform:uppercase;letter-spacing:0.05em">Lo que podés hacer ahora</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Analizar nichos de YouTube con opportunity score</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Ver videos virales en tiempo real</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Analizar canales de la competencia</p><p style="margin:0;font-size:14px;color:#8892B0">✓ &nbsp;Buscar keywords con datos de engagement</p></div><p style="margin:0 0 8px;font-size:13px;color:#5A6380;line-height:1.6">¿Necesitás más? Con <strong style="color:#8892B0">Pro</strong> obtenés análisis ilimitados, exportación CSV y resultados completos.</p></td></tr><tr><td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.07)"><p style="margin:0;font-size:12px;color:#5A6380">© 2026 TubeScout · No afiliado a YouTube ni a Google.</p></td></tr></table></td></tr></table></body></html>`
+        })
+      }).catch(e => console.error('Welcome email error:', e.message));
+    }
   } catch (e) {
     console.error('register-email error:', e.message);
     res.status(500).json({ error: 'Error al registrar el email' });
