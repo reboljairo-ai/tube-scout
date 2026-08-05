@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 const path = require('path');
 const { Pool } = require('pg');
@@ -13,8 +14,10 @@ async function initDB() {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       email TEXT UNIQUE NOT NULL,
       is_pro BOOLEAN DEFAULT FALSE,
+      license_key TEXT UNIQUE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS license_key TEXT UNIQUE;
     CREATE TABLE IF NOT EXISTS auth_tokens (
       token TEXT PRIMARY KEY,
       user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -126,6 +129,37 @@ function generateTitleFormulas(query) {
 // ── In-memory pending codes (short-lived, ok in-memory) ──
 const pendingCodes = new Map();
 
+function generateLicenseKey() {
+  const seg = () => crypto.randomBytes(2).toString('hex').toUpperCase();
+  return `TBSC-${seg()}-${seg()}-${seg()}`;
+}
+
+async function sendLicenseEmail(email, licenseKey) {
+  if (!RESEND_KEY) return;
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'TubeScout <onboarding@resend.dev>',
+      to: email,
+      subject: '🎉 Tu licencia TubeScout Pro está activa',
+      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#080910;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans',sans-serif"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:48px 24px"><table width="480" cellpadding="0" cellspacing="0" style="background:#0E1020;border-radius:16px;border:1px solid rgba(255,255,255,0.07);overflow:hidden"><tr><td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07)"><span style="font-size:18px;font-weight:800;color:#EDF0FF;letter-spacing:-0.02em">&#9678; TubeScout</span></td></tr><tr><td style="padding:36px 40px"><p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">¡Tu plan Pro está activo!</p><p style="margin:0 0 28px;font-size:15px;color:#8892B0;line-height:1.6">Ingresá esta clave en la extensión (icono de TubeScout → Activar Licencia Pro) para desbloquear análisis ilimitados.</p><div style="background:#141729;border:1px solid rgba(0,200,150,0.2);border-radius:12px;padding:20px 24px;margin-bottom:24px;text-align:center"><div style="font-size:11px;font-weight:600;color:#8892B0;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Tu licencia</div><div style="font-family:monospace;font-size:20px;font-weight:700;color:#00C896;letter-spacing:2px">${licenseKey}</div></div><p style="margin:0;font-size:13px;color:#5A6380;line-height:1.6">¿Algún problema? Respondé este email y te ayudamos.</p></td></tr><tr><td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.07)"><p style="margin:0;font-size:12px;color:#5A6380">© 2026 TubeScout · No afiliado a YouTube ni a Google.</p></td></tr></table></td></tr></table></body></html>`
+    })
+  }).catch(e => console.error('License email error:', e.message));
+}
+
+async function ensureAccessToken(userId) {
+  const existing = await db.query('SELECT token FROM auth_tokens WHERE user_id = $1 LIMIT 1', [userId]);
+  if (existing.rows.length) return existing.rows[0].token;
+  const token = crypto.randomBytes(32).toString('hex');
+  const today = new Date().toDateString();
+  await db.query(
+    'INSERT INTO auth_tokens (token, user_id, daily_count, last_reset) VALUES ($1, $2, 0, $3)',
+    [token, userId, today]
+  );
+  return token;
+}
+
 async function getRegisteredUser(req) {
   const auth = req.headers.authorization?.replace('Bearer ', '');
   if (!auth) return null;
@@ -142,7 +176,7 @@ async function checkDailyLimit(userData, res) {
     await db.query('UPDATE auth_tokens SET daily_count = 1, last_reset = $1 WHERE token = $2', [today, userData.token]);
     return true;
   }
-  const limit = userData.is_pro ? 999 : 10;
+  const limit = userData.is_pro ? 999 : 5;
   if (userData.daily_count >= limit) {
     res.status(429).json({ error: 'Límite diario alcanzado. Actualiza a Pro para análisis ilimitados.' });
     return false;
@@ -192,13 +226,109 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.options('*', cors());
+
+// Stricter limiter on the endpoints that mint free access (registration/auth) —
+// these are the ones bots hit directly to farm fake accounts, bypassing the
+// extension's own 3-analysis client-side gate entirely.
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Probá de nuevo en una hora.' }
+});
+const apiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiadas solicitudes. Probá de nuevo en unos minutos.' }
+});
+app.use('/api/register-email', authLimiter);
+app.use('/api/auth/request-code', authLimiter);
+app.use('/api/', apiLimiter);
+
+// Must be registered — with its raw-body middleware — before express.json() below.
+// express.json() is an app.use() with no path filter, so it runs for every route
+// including this one; if it ran first it would consume the request stream and hand
+// this handler an already-parsed object instead of a Buffer, breaking both the HMAC
+// signature check and JSON.parse(req.body.toString()). That silently broke every
+// Lemon Squeezy webhook call (500 error) — no paying customer ever got Pro activated.
+app.post('/api/webhooks/lemonsqueezy', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    if (!LS_WEBHOOK_SECRET) {
+      console.error('LEMON_SQUEEZY_WEBHOOK_SECRET no está configurada — rechazando webhook para evitar Pro falsificado.');
+      return res.status(503).json({ error: 'Webhook not configured' });
+    }
+    const sig  = req.headers['x-signature'];
+    const hash = crypto.createHmac('sha256', LS_WEBHOOK_SECRET).update(req.body).digest('hex');
+    if (!sig || sig.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(hash))) {
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
+    const payload = JSON.parse(req.body.toString());
+    const event   = payload.meta?.event_name;
+    const attrs   = payload.data?.attributes;
+    const email   = attrs?.user_email;
+
+    if (!email) return res.json({ ok: true });
+    const emailLower = email.toLowerCase();
+
+    if (['subscription_created', 'subscription_updated'].includes(event)) {
+      if (['active', 'trialing'].includes(attrs?.status)) {
+        // Upsert: the paying customer may never have registered in the extension first.
+        const { rows } = await db.query(
+          `INSERT INTO users (email, is_pro) VALUES ($1, true)
+           ON CONFLICT (email) DO UPDATE SET is_pro = true
+           RETURNING id, license_key`,
+          [emailLower]
+        );
+        let { id: userId, license_key: licenseKey } = rows[0];
+        if (!licenseKey) {
+          licenseKey = generateLicenseKey();
+          await db.query('UPDATE users SET license_key = $1 WHERE id = $2', [licenseKey, userId]);
+        }
+        if (event === 'subscription_created') {
+          await sendLicenseEmail(email, licenseKey);
+        }
+        console.log(`[LS] Pro activado: ${email}`);
+      }
+    }
+
+    if (['subscription_expired', 'subscription_cancelled'].includes(event)) {
+      await db.query('UPDATE users SET is_pro = false WHERE LOWER(email) = LOWER($1)', [email]);
+      console.log(`[LS] Pro removido: ${email}`);
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[LS webhook]', err.message);
+    res.status(500).json({ error: 'Webhook error' });
+  }
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Helpers ───────────────────────────────────────────────
 async function ytFetch(path) {
   const res = await fetch(`${BASE}${path}`);
-  return res.json();
+  const data = await res.json();
+  if (data.error) {
+    const reason = data.error.errors?.[0]?.reason || data.error.status;
+    const err = new Error(data.error.message || 'YouTube API error');
+    err.quotaExceeded = reason === 'quotaExceeded' || reason === 'RESOURCE_EXHAUSTED';
+    throw err;
+  }
+  return data;
+}
+
+function ytErrorResponse(res, err, fallback) {
+  console.error(fallback, err);
+  if (err.quotaExceeded) {
+    return res.status(503).json({ error: 'Servicio temporalmente saturado (límite de YouTube alcanzado). Probá de nuevo en unos minutos.' });
+  }
+  return res.status(500).json({ error: fallback });
 }
 
 function calcViralScore(views, likes, comments) {
@@ -292,21 +422,38 @@ app.post('/api/register-email', async (req, res) => {
     return res.status(400).json({ error: 'Email inválido' });
   }
   try {
-    const { rowCount } = await db.query(
-      'INSERT INTO users (email) VALUES ($1) ON CONFLICT (email) DO NOTHING',
-      [email.toLowerCase().trim()]
-    );
-    res.json({ success: true });
+    const emailLower = email.toLowerCase().trim();
 
-    if (RESEND_KEY && rowCount > 0) {
+    const inserted = await db.query(
+      'INSERT INTO users (email) VALUES ($1) ON CONFLICT (email) DO NOTHING RETURNING id',
+      [emailLower]
+    );
+    let userId, isNewUser;
+    if (inserted.rows.length) {
+      userId = inserted.rows[0].id;
+      isNewUser = true;
+    } else {
+      const existing = await db.query('SELECT id FROM users WHERE email = $1', [emailLower]);
+      userId = existing.rows[0].id;
+      isNewUser = false;
+    }
+
+    // Unlocks the real server-side daily limit (checkDailyLimit) and the /api/titles
+    // gate — without it the extension never sends an Authorization header and the
+    // user is stuck on a client-only lifetime counter that never resets.
+    const accessToken = await ensureAccessToken(userId);
+
+    res.json({ success: true, accessToken });
+
+    if (RESEND_KEY && isNewUser) {
       fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'TubeScout <onboarding@resend.dev>',
           to: email,
-          subject: '🎯 10 análisis/día activados — Bienvenido a TubeScout',
-          html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#080910;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans',sans-serif"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:48px 24px"><table width="480" cellpadding="0" cellspacing="0" style="background:#0E1020;border-radius:16px;border:1px solid rgba(255,255,255,0.07);overflow:hidden"><tr><td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07)"><span style="font-size:18px;font-weight:800;color:#EDF0FF;letter-spacing:-0.02em">&#9678; TubeScout</span></td></tr><tr><td style="padding:36px 40px"><p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">¡Ya estás dentro!</p><p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Tu cuenta gratuita está activa. Ahora tenés <strong style="color:#EDF0FF">10 análisis por día</strong> disponibles en la extensión.</p><div style="background:#141729;border:1px solid rgba(0,200,150,0.2);border-radius:12px;padding:20px 24px;margin-bottom:24px"><p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#00C896;text-transform:uppercase;letter-spacing:0.05em">Lo que podés hacer ahora</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Analizar nichos de YouTube con opportunity score</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Ver videos virales en tiempo real</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Analizar canales de la competencia</p><p style="margin:0;font-size:14px;color:#8892B0">✓ &nbsp;Buscar keywords con datos de engagement</p></div><p style="margin:0 0 8px;font-size:13px;color:#5A6380;line-height:1.6">¿Necesitás más? Con <strong style="color:#8892B0">Pro</strong> obtenés análisis ilimitados, exportación CSV y resultados completos.</p></td></tr><tr><td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.07)"><p style="margin:0;font-size:12px;color:#5A6380">© 2026 TubeScout · No afiliado a YouTube ni a Google.</p></td></tr></table></td></tr></table></body></html>`
+          subject: '🎯 5 análisis/día activados — Bienvenido a TubeScout',
+          html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#080910;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans',sans-serif"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:48px 24px"><table width="480" cellpadding="0" cellspacing="0" style="background:#0E1020;border-radius:16px;border:1px solid rgba(255,255,255,0.07);overflow:hidden"><tr><td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07)"><span style="font-size:18px;font-weight:800;color:#EDF0FF;letter-spacing:-0.02em">&#9678; TubeScout</span></td></tr><tr><td style="padding:36px 40px"><p style="margin:0 0 6px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">¡Ya estás dentro!</p><p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Tu cuenta gratuita está activa. Ahora tenés <strong style="color:#EDF0FF">5 análisis por día</strong> disponibles en la extensión.</p><div style="background:#141729;border:1px solid rgba(0,200,150,0.2);border-radius:12px;padding:20px 24px;margin-bottom:24px"><p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#00C896;text-transform:uppercase;letter-spacing:0.05em">Lo que podés hacer ahora</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Analizar nichos de YouTube con opportunity score</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Ver videos virales en tiempo real</p><p style="margin:0 0 8px;font-size:14px;color:#8892B0">✓ &nbsp;Analizar canales de la competencia</p><p style="margin:0;font-size:14px;color:#8892B0">✓ &nbsp;Buscar keywords con datos de engagement</p></div><p style="margin:0 0 8px;font-size:13px;color:#5A6380;line-height:1.6">¿Necesitás más? Con <strong style="color:#8892B0">Pro</strong> obtenés análisis ilimitados, exportación CSV y resultados completos.</p></td></tr><tr><td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.07)"><p style="margin:0;font-size:12px;color:#5A6380">© 2026 TubeScout · No afiliado a YouTube ni a Google.</p></td></tr></table></td></tr></table></body></html>`
         })
       }).catch(e => console.error('Welcome email error:', e.message));
     }
@@ -358,15 +505,19 @@ app.post('/api/analyze/niche', async (req, res) => {
       medium: Math.round((fmts.medium||0)/t*100),
       long: Math.round((fmts.long||0)/t*100)
     };
+    // Revenue-estimate language is what the Chrome Web Store listing explicitly avoids
+    // (see CHROME-STORE-LISTING.md) — keep it Pro-only so free/anonymous users (which is
+    // what a store reviewer would almost always be testing as) never see it, while still
+    // using it as an upgrade incentive for Pro.
+    const isPro = !!userData?.is_pro;
     const cpm = estimateCPM(query);
-    const income = estimateIncome(avgViews, cpm);
+    const income = isPro ? estimateIncome(avgViews, cpm) : null;
 
-    const limited = limitResults({ videos, stats: { avgViews, avgEngagement, avgSubs }, score, formatBreakdown, income }, isRegistered, 'niche');
+    const limited = limitResults({ videos, stats: { avgViews, avgEngagement, avgSubs }, score, formatBreakdown, income, incomeLocked: !isPro }, isRegistered, 'niche');
     if (userData) saveHistory(userData.user_id, 'niche', query, { score, income, stats: { avgViews, avgEngagement, avgSubs } });
     res.json({ data: limited });
   } catch (err) {
-    console.error('analyzeNiche error:', err);
-    res.status(500).json({ error: 'Error al analizar el nicho. Intenta de nuevo.' });
+    ytErrorResponse(res, err, 'Error al analizar el nicho. Intenta de nuevo.');
   }
 });
 
@@ -389,8 +540,7 @@ app.get('/api/trending', async (req, res) => {
     const limited = limitResults({ videos }, isRegistered, 'trending');
     res.json({ data: limited });
   } catch (err) {
-    console.error('trending error:', err);
-    res.status(500).json({ error: 'Error al cargar tendencias.' });
+    ytErrorResponse(res, err, 'Error al cargar tendencias.');
   }
 });
 
@@ -467,8 +617,7 @@ app.post('/api/analyze/channel', async (req, res) => {
     const limited = limitResults(channelResult, isRegistered, 'channel');
     res.json({ data: limited });
   } catch (err) {
-    console.error('analyzeChannel error:', err);
-    res.status(500).json({ error: 'Error al analizar el canal.' });
+    ytErrorResponse(res, err, 'Error al analizar el canal.');
   }
 });
 
@@ -544,7 +693,10 @@ app.post('/api/keywords', async (req, res) => {
       `https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(topic)}${langParam}`
     );
     const autocompleteData = await autocompleteRes.json();
-    const suggestions = (autocompleteData[1] || []).slice(0, 10);
+    // Each suggestion costs ~101 quota units (search.list=100 + videos.list=1) against a
+    // 10,000/day YouTube Data API quota — capped at 6 (was 10) so one keyword search
+    // doesn't burn ~6% of the whole day's shared quota by itself.
+    const suggestions = (autocompleteData[1] || []).slice(0, 6);
 
     if (!suggestions.length) {
       return res.json({ data: { keywords: [] } });
@@ -587,7 +739,8 @@ app.post('/api/keywords', async (req, res) => {
           const competition = competitionScore > 65 ? 'Alta' : competitionScore > 35 ? 'Media' : 'Baja';
 
           return { keyword, score, competition, totalResults, avgEngagement, topViewsTotal, avgViews };
-        } catch {
+        } catch (e) {
+          if (e.quotaExceeded) throw e; // don't mask a quota outage as 6 fake zero-score keywords
           return { keyword, score: 0, competition: 'N/A', totalResults: 0, avgEngagement: '0' };
         }
       })
@@ -599,6 +752,7 @@ app.post('/api/keywords', async (req, res) => {
     const limited2 = limitResults({ keywords: keywordData }, !!userData2, 'keywords');
     res.json({ data: { ...limited2, parsedTopic: topic, lang, region } });
   } catch (err) {
+    if (err.quotaExceeded) return ytErrorResponse(res, err, 'Error al buscar palabras clave.');
     console.error('keywords error:', err);
     res.status(500).json({ error: 'Error al buscar palabras clave.' });
   }
@@ -616,7 +770,7 @@ app.post('/api/titles', async (req, res) => {
     const topTitles = (searchData.items || []).map(v => v.snippet.title).slice(0, 5);
     res.json({ data: { titles: generateTitleFormulas(query), topTitles } });
   } catch (err) {
-    res.status(500).json({ error: 'Error al generar títulos.' });
+    ytErrorResponse(res, err, 'Error al generar títulos.');
   }
 });
 
@@ -654,7 +808,7 @@ app.get('/api/user/stats', async (req, res) => {
       isPro: userData.is_pro,
       todayCount,
       totalSearches: parseInt(totalRows[0].total),
-      dailyLimit: userData.is_pro ? 'Ilimitado' : 10
+      dailyLimit: userData.is_pro ? 'Ilimitado' : 5
     });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener estadísticas' });
@@ -722,38 +876,22 @@ app.delete('/api/favorites/:id', async (req, res) => {
   }
 });
 
-// ── Lemon Squeezy Webhook ─────────────────────────────────
-app.post('/api/webhooks/lemonsqueezy', express.raw({ type: 'application/json' }), async (req, res) => {
+// ── License Activation ────────────────────────────────────
+app.post('/api/license/validate', async (req, res) => {
   try {
-    if (LS_WEBHOOK_SECRET) {
-      const sig  = req.headers['x-signature'];
-      const hash = crypto.createHmac('sha256', LS_WEBHOOK_SECRET).update(req.body).digest('hex');
-      if (sig !== hash) return res.status(401).json({ error: 'Invalid signature' });
-    }
-
-    const payload = JSON.parse(req.body.toString());
-    const event   = payload.meta?.event_name;
-    const attrs   = payload.data?.attributes;
-    const email   = attrs?.user_email;
-
-    if (!email) return res.json({ ok: true });
-
-    if (['subscription_created', 'subscription_updated'].includes(event)) {
-      if (['active', 'trialing'].includes(attrs?.status)) {
-        await db.query('UPDATE users SET is_pro = true WHERE LOWER(email) = LOWER($1)', [email]);
-        console.log(`[LS] Pro activado: ${email}`);
-      }
-    }
-
-    if (['subscription_expired', 'subscription_cancelled'].includes(event)) {
-      await db.query('UPDATE users SET is_pro = false WHERE LOWER(email) = LOWER($1)', [email]);
-      console.log(`[LS] Pro removido: ${email}`);
-    }
-
-    res.json({ ok: true });
+    const { licenseKey } = req.body;
+    if (!licenseKey) return res.status(400).json({ valid: false, error: 'licenseKey requerido' });
+    const { rows } = await db.query(
+      'SELECT id, is_pro FROM users WHERE license_key = $1',
+      [licenseKey.trim().toUpperCase()]
+    );
+    const user = rows[0];
+    if (!user || !user.is_pro) return res.json({ valid: false, error: 'Licencia inválida o expirada' });
+    const accessToken = await ensureAccessToken(user.id);
+    res.json({ valid: true, accessToken });
   } catch (err) {
-    console.error('[LS webhook]', err.message);
-    res.status(500).json({ error: 'Webhook error' });
+    console.error('license validate error:', err.message);
+    res.status(500).json({ valid: false, error: 'Error interno' });
   }
 });
 

@@ -1,6 +1,6 @@
 const $ = id => document.getElementById(id);
 const LIMIT_ANON  = 3;
-const LIMIT_EMAIL = 10;
+const LIMIT_EMAIL = 5;
 
 const stripEmoji = s => s.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
 
@@ -95,10 +95,15 @@ function showProState(key) {
 }
 
 // ── Usage tracking ────────────────────────────────────────
+// Anon users (no accessToken) are gated locally with a lifetime cap of LIMIT_ANON,
+// since the backend can't identify them. Registered users have a real accessToken,
+// so the backend enforces the actual 5/day limit (reset daily) via checkDailyLimit —
+// we let every request through here and handle a 429 response where the call is made.
 async function checkAndIncrementUsage() {
-  const { isPro, totalAnalysisCount, emailRegistered } =
-    await chrome.storage.local.get(['isPro', 'totalAnalysisCount', 'emailRegistered']);
+  const { isPro, totalAnalysisCount, emailRegistered, accessToken } =
+    await chrome.storage.local.get(['isPro', 'totalAnalysisCount', 'emailRegistered', 'accessToken']);
   if (isPro) return true;
+  if (emailRegistered && accessToken) return true;
   const total = totalAnalysisCount || 0;
   if (total < LIMIT_ANON) {
     await chrome.storage.local.set({ totalAnalysisCount: total + 1 });
@@ -107,11 +112,7 @@ async function checkAndIncrementUsage() {
     }
     return true;
   }
-  if (emailRegistered && total < LIMIT_EMAIL) {
-    await chrome.storage.local.set({ totalAnalysisCount: total + 1 });
-    return true;
-  }
-  if (!emailRegistered) openModal();
+  openModal();
   return false;
 }
 
@@ -158,9 +159,9 @@ $('send-code-btn')?.addEventListener('click', async () => {
   $('send-code-btn').textContent = t('Registrando…', 'Registering…');
   const resp = await chrome.runtime.sendMessage({ action: 'registerEmail', email });
   $('send-code-btn').disabled = false;
-  $('send-code-btn').textContent = t('Obtener 10 análisis gratis →', 'Get 10 free analyses →');
+  $('send-code-btn').textContent = t('Obtener 5 análisis gratis →', 'Get 5 free analyses →');
   if (resp.success) {
-    showModalMsg(t('¡Listo! 10 análisis desbloqueados.', 'Done! 10 analyses unlocked.'), 'success');
+    showModalMsg(t('¡Listo! 5 análisis desbloqueados.', 'Done! 5 analyses unlocked.'), 'success');
     setTimeout(() => { closeModal(); init(); }, 1200);
   } else {
     showModalMsg(resp.error || t('Error al registrar', 'Registration error'), 'error');
@@ -225,6 +226,7 @@ async function generateTitles() {
   $('title-btn').disabled = true;
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'generateTitles', query });
+    if (resp.status === 429) { $('title-results').innerHTML = await limitHTML(); return; }
     if (resp.error) throw new Error(resp.error);
     renderTitleResults(resp.data);
   } catch (err) {
@@ -272,6 +274,7 @@ async function analyzeNiche() {
 
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'analyzeNiche', query });
+    if (resp.status === 429) { $('niche-results').innerHTML = await limitHTML(); return; }
     if (resp.error) throw new Error(resp.error);
     await renderNicheResults(query, resp.data);
     await saveToHistory('nicheHistory', query);
@@ -285,7 +288,7 @@ async function analyzeNiche() {
 }
 
 async function renderNicheResults(query, data) {
-  const { videos, stats, score, income, formatBreakdown } = data;
+  const { videos, stats, score, income, incomeLocked, formatBreakdown } = data;
   const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
   const scoreLabel = score >= 70
     ? t('Alta Oportunidad', 'High Opportunity')
@@ -302,6 +305,12 @@ async function renderNicheResults(query, data) {
   const favs = await getFavorites();
   const isSaved = favs.some(f => f.query === query);
 
+  const formatHTML = formatBreakdown ? `<div class="format-row">
+        <div class="fmt-badge short">${formatBreakdown.short}%<span class="fmt-label">Shorts</span></div>
+        <div class="fmt-badge medium">${formatBreakdown.medium}%<span class="fmt-label">${t('Medio', 'Medium')}</span></div>
+        <div class="fmt-badge long">${formatBreakdown.long}%<span class="fmt-label">${t('Largo', 'Long')}</span></div>
+      </div>` : '';
+
   const incomeHTML = income ? `
     <div class="income-card">
       <div class="income-row">
@@ -314,12 +323,15 @@ async function renderNicheResults(query, data) {
           <span class="income-label">${t('Ingresos/mes est.', 'Est. monthly revenue')}</span>
         </div>
       </div>
-      ${formatBreakdown ? `<div class="format-row">
-        <div class="fmt-badge short">${formatBreakdown.short}%<span class="fmt-label">Shorts</span></div>
-        <div class="fmt-badge medium">${formatBreakdown.medium}%<span class="fmt-label">${t('Medio', 'Medium')}</span></div>
-        <div class="fmt-badge long">${formatBreakdown.long}%<span class="fmt-label">${t('Largo', 'Long')}</span></div>
-      </div>` : ''}
-    </div>` : '';
+      ${formatHTML}
+    </div>` : incomeLocked ? `
+    <div class="income-card income-card-locked">
+      <div class="income-row" style="align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--muted)">🔒 ${t('Estimación de ingresos — función Pro', 'Revenue estimate — Pro feature')}</span>
+        <button class="btn-lock-upgrade js-upgrade" style="margin-left:auto;white-space:nowrap">${t('Ver Pro', 'View Pro')}</button>
+      </div>
+      ${formatHTML}
+    </div>` : formatHTML;
 
   const ringDeg = Math.round(score * 3.6);
   $('niche-results').innerHTML = `
@@ -397,6 +409,7 @@ async function searchViral() {
 
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'analyzeNiche', query });
+    if (resp.status === 429) { $('trending-results').innerHTML = await limitHTML(); return; }
     if (resp.error) throw new Error(resp.error);
     const videos = resp.data?.videos || [];
     if (!videos.length) throw new Error(t('No se encontraron videos.', 'No videos found.'));
@@ -450,6 +463,7 @@ async function analyzeChannel() {
 
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'analyzeChannel', input });
+    if (resp.status === 429) { $('channel-results').innerHTML = await limitHTML(); return; }
     if (resp.error) throw new Error(resp.error);
     renderChannelResults(resp.data);
   } catch (err) {
@@ -515,6 +529,7 @@ async function searchKeywords() {
 
   try {
     const resp = await chrome.runtime.sendMessage({ action: 'searchKeywords', query });
+    if (resp.status === 429) { $('kw-results').innerHTML = await limitHTML(); return; }
     if (resp.error) throw new Error(resp.error);
     renderKeywordResults(resp.data);
     await saveToHistory('kwHistory', query);
@@ -688,13 +703,13 @@ async function limitHTML() {
     return `
       <div class="empty-state">
         <p>${t('Llegaste al límite de análisis gratuitos.', 'You reached the free analysis limit.')}</p>
-        <button onclick="window.openModal()" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('📧 Registrate gratis → 10 análisis/día', '📧 Register free → 10 analyses/day')}</button>
+        <button onclick="window.openModal()" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('📧 Registrate gratis → 5 análisis/día', '📧 Register free → 5 analyses/day')}</button>
         <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('o', 'or')} <span class="js-upgrade" style="cursor:pointer;color:var(--accent)">${t('actualiza a Pro para ilimitados', 'upgrade to Pro for unlimited')}</span></p>
       </div>`;
   }
   return `
     <div class="empty-state">
-      <p>${t('Llegaste al límite diario de 10 análisis.', 'You reached your daily limit of 10 analyses.')}</p>
+      <p>${t('Llegaste al límite diario de 5 análisis.', 'You reached your daily limit of 5 analyses.')}</p>
       <button class="js-upgrade" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('⚡ Actualiza a Pro → Ilimitados', '⚡ Upgrade to Pro → Unlimited')}</button>
       <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('El límite se resetea a medianoche.', 'Limit resets at midnight.')}</p>
     </div>`;

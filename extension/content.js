@@ -12,28 +12,53 @@ function insertButton() {
   target.insertAdjacentElement('afterend', btn);
 }
 
+// Reads a count from the first selector that matches, preferring aria-label
+// (exact numbers, more stable across YouTube redesigns) over visible text
+// (often abbreviated like "12K"). Returns null — not 0 — when nothing matches,
+// so the caller can show "no disponible" instead of a fake zero.
+function extractCount(selectors) {
+  for (const sel of selectors) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    const raw = el.getAttribute('aria-label') || el.textContent || '';
+    const digits = raw.replace(/[^\d]/g, '');
+    if (digits) return parseInt(digits, 10);
+  }
+  return null;
+}
+
 function getVideoData() {
   const videoId = new URLSearchParams(window.location.search).get('v');
   if (!videoId) return null;
 
-  const views = parseInt(
-    (document.querySelector('.view-count')?.textContent ||
-     document.querySelector('#count .view-count-sub-count')?.textContent || '0')
-      .replace(/[^0-9]/g, '')
-  ) || 0;
+  const views = extractCount([
+    '.view-count',
+    '#count .view-count-sub-count',
+    'ytd-watch-info-text #view-count',
+  ]);
 
-  const likesEl = document.querySelector('ytd-toggle-button-renderer #text');
-  const likes = likesEl ? parseInt(likesEl.textContent.replace(/[^0-9]/g, '')) || 0 : 0;
+  // YouTube has redesigned the like button several times; keep old and new
+  // selectors as fallbacks since we can't verify the current DOM live.
+  const likes = extractCount([
+    'like-button-view-model button',
+    'segmented-like-dislike-button-view-model button',
+    'button[aria-label*="like" i]:not([aria-label*="dislike" i])',
+    'ytd-toggle-button-renderer #text',
+  ]);
 
-  const subsEl = document.querySelector('#owner-sub-count');
-  const subsText = subsEl?.textContent?.trim() || '—';
+  const subsEl = document.querySelector('#owner-sub-count, #subscriber-count');
+  const subsText = subsEl?.textContent?.trim() || null;
 
-  const engagementRate = views > 0 ? ((likes / views) * 100).toFixed(2) : '0';
-  const viewScore = Math.min(100, Math.log10(Math.max(1, views)) * 15);
-  const engScore = Math.min(100, parseFloat(engagementRate) * 20);
-  const viralScore = Math.round(viewScore * 0.6 + engScore * 0.4);
+  const hasData = views != null;
+  const engagementRate = hasData && likes != null && views > 0 ? ((likes / views) * 100).toFixed(2) : null;
+  const viralScore = hasData
+    ? Math.round(
+        Math.min(100, Math.log10(Math.max(1, views)) * 15) * 0.6 +
+        Math.min(100, (parseFloat(engagementRate) || 0) * 20) * 0.4
+      )
+    : null;
 
-  return { videoId, views, likes, subsText, engagementRate, viralScore };
+  return { videoId, views, likes, subsText, engagementRate, viralScore, incomplete: !hasData };
 }
 
 function fmtNum(n) {
@@ -61,8 +86,8 @@ function togglePanel() {
   panelVisible = true;
 
   const data = getVideoData();
-  if (!data) {
-    panel.innerHTML = '<div class="ts-header"><span class="ts-logo">🎯 TubeScout</span><button class="ts-close" id="ts-close-btn">✕</button></div><div class="ts-body"><p style="color:#94A3B8;font-size:12px;text-align:center;padding:16px">No se pudo leer los datos del video.</p></div>';
+  if (!data || data.incomplete) {
+    panel.innerHTML = '<div class="ts-header"><span class="ts-logo">🎯 TubeScout</span><button class="ts-close" id="ts-close-btn">✕</button></div><div class="ts-body"><p style="color:#94A3B8;font-size:12px;text-align:center;padding:16px">No se pudo leer los datos del video. Puede que YouTube haya cambiado su diseño — probá recargando la página.</p></div>';
     document.getElementById('ts-close-btn').addEventListener('click', () => {
       panel.style.display = 'none';
       panelVisible = false;
@@ -83,11 +108,11 @@ function togglePanel() {
       <div class="ts-divider"></div>
       <div class="ts-stat-row">
         <div class="ts-stat"><div class="ts-stat-val">${fmtNum(data.views)}</div><div class="ts-stat-lbl">Views</div></div>
-        <div class="ts-stat"><div class="ts-stat-val">${data.engagementRate}%</div><div class="ts-stat-lbl">Engagement</div></div>
+        <div class="ts-stat"><div class="ts-stat-val">${data.engagementRate != null ? data.engagementRate + '%' : '—'}</div><div class="ts-stat-lbl">Engagement</div></div>
       </div>
       <div class="ts-stat-row" style="margin-top:8px">
-        <div class="ts-stat"><div class="ts-stat-val">${fmtNum(data.likes)}</div><div class="ts-stat-lbl">Likes</div></div>
-        <div class="ts-stat"><div class="ts-stat-val">${data.subsText}</div><div class="ts-stat-lbl">Subs canal</div></div>
+        <div class="ts-stat"><div class="ts-stat-val">${data.likes != null ? fmtNum(data.likes) : '—'}</div><div class="ts-stat-lbl">Likes</div></div>
+        <div class="ts-stat"><div class="ts-stat-val">${data.subsText || '—'}</div><div class="ts-stat-lbl">Subs canal</div></div>
       </div>
     </div>
   `;

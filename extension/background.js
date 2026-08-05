@@ -33,7 +33,7 @@ chrome.tabs.onRemoved.addListener(tabId => {
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  handleMessage(msg).then(sendResponse).catch(err => sendResponse({ error: err.message }));
+  handleMessage(msg).then(sendResponse).catch(err => sendResponse({ error: err.message, status: err.status }));
   return true;
 });
 
@@ -48,6 +48,7 @@ async function handleMessage(msg) {
     case 'getTrending':     return getTrending(msg.region, msg.category);
     case 'analyzeChannel':  return analyzeChannel(msg.input);
     case 'activateLicense': return activateLicense(msg.licenseKey);
+    case 'registerEmail':   return registerEmail(msg.email);
     default: return { error: 'Unknown action' };
   }
 }
@@ -58,7 +59,11 @@ async function apiFetch(path, options = {}) {
   if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
   const res = await fetch(`${BACKEND_URL}${path}`, { headers, ...options });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
+  if (!res.ok) {
+    const err = new Error(data.error || `Error ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
   return data;
 }
 
@@ -111,6 +116,24 @@ async function verifyCode(email, code) {
   }
 }
 
+async function registerEmail(email) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/register-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (data.success) {
+      await chrome.storage.local.set({ emailRegistered: true, userEmail: email, accessToken: data.accessToken });
+      return { success: true };
+    }
+    return { success: false, error: data.error || 'Error al registrar' };
+  } catch {
+    return { success: false, error: 'Error de conexión' };
+  }
+}
+
 async function activateLicense(licenseKey) {
   try {
     const data = await apiFetch('/api/license/validate', {
@@ -118,7 +141,7 @@ async function activateLicense(licenseKey) {
       body: JSON.stringify({ licenseKey })
     });
     if (data.valid) {
-      await chrome.storage.local.set({ isPro: true, licenseKey });
+      await chrome.storage.local.set({ isPro: true, licenseKey, accessToken: data.accessToken, emailRegistered: true });
       return { success: true };
     }
     return { success: false, error: data.error || 'Licencia inválida' };
