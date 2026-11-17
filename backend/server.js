@@ -18,6 +18,8 @@ async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     ALTER TABLE users ADD COLUMN IF NOT EXISTS license_key TEXT UNIQUE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS nudge1_sent_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS nudge2_sent_at TIMESTAMPTZ;
     CREATE TABLE IF NOT EXISTS auth_tokens (
       token TEXT PRIMARY KEY,
       user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -41,7 +43,23 @@ async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(user_id, query)
     );
+    CREATE TABLE IF NOT EXISTS _migrations (
+      name TEXT PRIMARY KEY,
+      applied_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
+
+  // One-time backfill so the nudge-email job (added below) doesn't blast every
+  // existing free user the moment it ships — only users registered *after*
+  // this migration ever get a real nudge. Guarded by _migrations so a later
+  // restart mid-window (e.g. a user who signed up 2h before a redeploy)
+  // doesn't get incorrectly marked as "already nudged" before 24h/72h hit.
+  const backfilled = await db.query(`SELECT 1 FROM _migrations WHERE name = 'nudge_backfill'`);
+  if (backfilled.rows.length === 0) {
+    await db.query(`UPDATE users SET nudge1_sent_at = NOW(), nudge2_sent_at = NOW() WHERE nudge1_sent_at IS NULL`);
+    await db.query(`INSERT INTO _migrations (name) VALUES ('nudge_backfill')`);
+  }
+
   console.log('DB ready');
 }
 initDB().catch(console.error);
@@ -930,6 +948,67 @@ app.get('/api/checkout/:plan', async (req, res) => {
     : base;
   res.json({ url });
 });
+
+// ── Pro upgrade nudge emails ────────────────────────────────
+// This runs inside the same long-lived Node process (Railway, not
+// serverless), so a plain interval is enough — no external cron needed.
+// Catches free users ~24h and ~72h after registering who never upgraded.
+async function sendNudgeEmail(email, { subject, html }) {
+  if (!RESEND_KEY) return;
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from: 'TubeScout <noreply@getamalify.com>', to: email, subject, html })
+  }).catch(e => console.error('Nudge email error:', e.message));
+}
+
+function nudgeShell(bodyHtml) {
+  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#080910;font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans',sans-serif"><table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:48px 24px"><table width="480" cellpadding="0" cellspacing="0" style="background:#0E1020;border-radius:16px;border:1px solid rgba(255,255,255,0.07);overflow:hidden"><tr><td style="padding:36px 40px 28px;border-bottom:1px solid rgba(255,255,255,0.07)"><span style="font-size:18px;font-weight:800;color:#EDF0FF;letter-spacing:-0.02em">&#9678; TubeScout</span></td></tr><tr><td style="padding:36px 40px">${bodyHtml}</td></tr><tr><td style="padding:20px 40px;border-top:1px solid rgba(255,255,255,0.07)"><p style="margin:0;font-size:12px;color:#5A6380">© 2026 TubeScout · No afiliado a YouTube ni a Google.</p></td></tr></table></td></tr></table></body></html>`;
+}
+
+function nudge1Html() {
+  return nudgeShell(`
+    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">¿Viste el CPM estimado de tu nicho?</p>
+    <p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Con <strong style="color:#EDF0FF">TubeScout Pro</strong> tenés análisis ilimitados y los ingresos estimados de cada nicho sin blur — para decidir en qué canal invertir tiempo, no para adivinar.</p>
+    <a href="${LS_CHECKOUT_MONTHLY}" style="display:block;text-align:center;background:#00C896;color:#080910;font-size:14px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;margin-bottom:16px">Ver TubeScout Pro — $4.99/mes</a>
+    <p style="margin:0;font-size:12px;color:#5A6380">★★★★★ 5.0 en Chrome Web Store</p>
+  `);
+}
+
+function nudge2Html() {
+  return nudgeShell(`
+    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">Tu límite gratis se resetea todos los días</p>
+    <p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Si ya estás usando TubeScout seguido, Pro te saca ese tope de 5 análisis/día — ilimitado por <strong style="color:#EDF0FF">$4.99/mes</strong>, cancelás cuando quieras.</p>
+    <a href="${LS_CHECKOUT_MONTHLY}" style="display:block;text-align:center;background:#00C896;color:#080910;font-size:14px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;margin-bottom:16px">Actualizar a Pro</a>
+    <p style="margin:0;font-size:12px;color:#5A6380">★★★★★ 5.0 en Chrome Web Store</p>
+  `);
+}
+
+async function runNudgeJob() {
+  try {
+    const due1 = await db.query(`
+      SELECT id, email FROM users
+      WHERE is_pro = false AND nudge1_sent_at IS NULL AND created_at <= NOW() - INTERVAL '24 hours'
+    `);
+    for (const u of due1.rows) {
+      await sendNudgeEmail(u.email, { subject: '¿Viste el CPM estimado de tu nicho? — TubeScout', html: nudge1Html() });
+      await db.query('UPDATE users SET nudge1_sent_at = NOW() WHERE id = $1', [u.id]);
+    }
+
+    const due2 = await db.query(`
+      SELECT id, email FROM users
+      WHERE is_pro = false AND nudge2_sent_at IS NULL AND created_at <= NOW() - INTERVAL '72 hours'
+    `);
+    for (const u of due2.rows) {
+      await sendNudgeEmail(u.email, { subject: 'Tu límite gratis se resetea todos los días — TubeScout', html: nudge2Html() });
+      await db.query('UPDATE users SET nudge2_sent_at = NOW() WHERE id = $1', [u.id]);
+    }
+  } catch (err) {
+    console.error('nudge job error:', err.message);
+  }
+}
+setInterval(() => runNudgeJob().catch(e => console.error('nudge job error:', e.message)), 60 * 60 * 1000);
+runNudgeJob().catch(e => console.error('nudge job error:', e.message));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`TubeScout API running on :${PORT}`));

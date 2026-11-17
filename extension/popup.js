@@ -325,10 +325,20 @@ async function renderNicheResults(query, data) {
       </div>
       ${formatHTML}
     </div>` : incomeLocked ? `
-    <div class="income-card income-card-locked">
-      <div class="income-row" style="align-items:center;gap:8px">
-        <span style="font-size:12px;color:var(--muted)">🔒 ${t('Estimación de ingresos — función Pro', 'Revenue estimate — Pro feature')}</span>
-        <button class="btn-lock-upgrade js-upgrade" style="margin-left:auto;white-space:nowrap">${t('Ver Pro', 'View Pro')}</button>
+    <div class="income-card income-card-locked" style="position:relative">
+      <div class="income-row" style="filter:blur(5px);user-select:none;pointer-events:none">
+        <div class="income-stat">
+          <span class="income-val">$18 CPM</span>
+          <span class="income-label">${t('CPM estimado', 'Est. CPM')}</span>
+        </div>
+        <div class="income-stat">
+          <span class="income-val">$412–$890</span>
+          <span class="income-label">${t('Ingresos/mes est.', 'Est. monthly revenue')}</span>
+        </div>
+      </div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(10,10,10,0.35);border-radius:8px">
+        <span style="font-size:11px;color:#fff;font-weight:600">🔒 ${t('Ver CPM e ingresos reales', 'See real CPM & revenue')}</span>
+        <button class="btn-lock-upgrade js-upgrade" style="white-space:nowrap">${t('Ver Pro', 'View Pro')}</button>
       </div>
       ${formatHTML}
     </div>` : formatHTML;
@@ -697,6 +707,18 @@ function errorHTML(msg) {
   return `<div class="empty-state"><p>${msg}</p></div>`;
 }
 
+// The backend resets daily_count by comparing toDateString() in server-local time,
+// which on Railway containers defaults to UTC — this approximates that reset point.
+// It's a UX countdown only; the actual gate is still enforced server-side regardless.
+function timeUntilReset() {
+  const now = new Date();
+  const nextMidnightUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  const diffMs = nextMidnightUTC - now.getTime();
+  const h = Math.floor(diffMs / 3600000);
+  const m = Math.floor((diffMs % 3600000) / 60000);
+  return { h, m };
+}
+
 async function limitHTML() {
   const { emailRegistered } = await chrome.storage.local.get('emailRegistered');
   if (!emailRegistered) {
@@ -707,11 +729,14 @@ async function limitHTML() {
         <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('o', 'or')} <span class="js-upgrade" style="cursor:pointer;color:var(--accent)">${t('actualiza a Pro para ilimitados', 'upgrade to Pro for unlimited')}</span></p>
       </div>`;
   }
+  const { h, m } = timeUntilReset();
+  const countdown = t(`${h}h ${m}min`, `${h}h ${m}min`);
   return `
     <div class="empty-state">
       <p>${t('Llegaste al límite diario de 5 análisis.', 'You reached your daily limit of 5 analyses.')}</p>
       <button class="js-upgrade" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('⚡ Actualiza a Pro → Ilimitados', '⚡ Upgrade to Pro → Unlimited')}</button>
-      <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('El límite se resetea a medianoche.', 'Limit resets at midnight.')}</p>
+      <p style="font-size:10px;color:var(--muted);margin-top:4px">${t(`Se resetea en ${countdown}.`, `Resets in ${countdown}.`)}</p>
+      <p style="font-size:10px;color:var(--muted);margin-top:8px">★★★★★ ${t('5.0 en Chrome Web Store', '5.0 on Chrome Web Store')}</p>
     </div>`;
 }
 
