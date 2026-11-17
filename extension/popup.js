@@ -860,4 +860,27 @@ document.addEventListener('click', async e => {
   }
 });
 
+// If the side panel is opened while the active tab is a YouTube video, jump
+// straight to the Channel tab and run the analysis for that channel instead
+// of making the user copy/paste the URL themselves.
+async function tryAutoAnalyzeFromYouTube() {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id || !/^https:\/\/www\.youtube\.com\/watch/.test(tab.url || '')) return;
+
+    const resp = await chrome.tabs.sendMessage(tab.id, { action: 'getChannelInfo' }).catch(() => null);
+    if (!resp?.channelUrl) return;
+
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
+    document.querySelector('[data-tab="channel"]').classList.add('active');
+    $('panel-channel').classList.add('active');
+    $('channel-input').value = resp.channelUrl;
+    analyzeChannel();
+  } catch {
+    // No content script on this tab (not a youtube.com/watch page) — stay on the default tab.
+  }
+}
+
 init();
+tryAutoAnalyzeFromYouTube();
