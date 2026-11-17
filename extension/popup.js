@@ -734,7 +734,7 @@ async function limitHTML() {
   return `
     <div class="empty-state">
       <p>${t('Llegaste al límite diario de 5 análisis.', 'You reached your daily limit of 5 analyses.')}</p>
-      <button class="js-upgrade" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('⚡ Actualiza a Pro → Ilimitados', '⚡ Upgrade to Pro → Unlimited')}</button>
+      <button class="js-upgrade" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('🎁 Probá Pro gratis 3 días', '🎁 Try Pro free for 3 days')}</button>
       <p style="font-size:10px;color:var(--muted);margin-top:4px">${t(`Se resetea en ${countdown}.`, `Resets in ${countdown}.`)}</p>
       <p style="font-size:10px;color:var(--muted);margin-top:8px">★★★★★ ${t('5.0 en Chrome Web Store', '5.0 on Chrome Web Store')}</p>
     </div>`;

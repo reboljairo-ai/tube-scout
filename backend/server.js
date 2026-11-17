@@ -293,7 +293,7 @@ app.post('/api/webhooks/lemonsqueezy', express.raw({ type: 'application/json' })
     const emailLower = email.toLowerCase();
 
     if (['subscription_created', 'subscription_updated'].includes(event)) {
-      if (['active', 'trialing'].includes(attrs?.status)) {
+      if (['active', 'on_trial'].includes(attrs?.status)) {
         // Upsert: the paying customer may never have registered in the extension first.
         const { rows } = await db.query(
           `INSERT INTO users (email, is_pro) VALUES ($1, true)
@@ -969,17 +969,17 @@ function nudgeShell(bodyHtml) {
 function nudge1Html() {
   return nudgeShell(`
     <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">¿Viste el CPM estimado de tu nicho?</p>
-    <p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Con <strong style="color:#EDF0FF">TubeScout Pro</strong> tenés análisis ilimitados y los ingresos estimados de cada nicho sin blur — para decidir en qué canal invertir tiempo, no para adivinar.</p>
-    <a href="${LS_CHECKOUT_MONTHLY}" style="display:block;text-align:center;background:#00C896;color:#080910;font-size:14px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;margin-bottom:16px">Ver TubeScout Pro — $4.99/mes</a>
+    <p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Con <strong style="color:#EDF0FF">TubeScout Pro</strong> tenés análisis ilimitados y los ingresos estimados de cada nicho sin blur — para decidir en qué canal invertir tiempo, no para adivinar. Podés probarlo <strong style="color:#EDF0FF">3 días gratis</strong>.</p>
+    <a href="${LS_CHECKOUT_MONTHLY}" style="display:block;text-align:center;background:#00C896;color:#080910;font-size:14px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;margin-bottom:16px">Probar Pro gratis 3 días</a>
     <p style="margin:0;font-size:12px;color:#5A6380">★★★★★ 5.0 en Chrome Web Store</p>
   `);
 }
 
 function nudge2Html() {
   return nudgeShell(`
-    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">Tu límite gratis se resetea todos los días</p>
-    <p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Si ya estás usando TubeScout seguido, Pro te saca ese tope de 5 análisis/día — ilimitado por <strong style="color:#EDF0FF">$4.99/mes</strong>, cancelás cuando quieras.</p>
-    <a href="${LS_CHECKOUT_MONTHLY}" style="display:block;text-align:center;background:#00C896;color:#080910;font-size:14px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;margin-bottom:16px">Actualizar a Pro</a>
+    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#EDF0FF;letter-spacing:-0.02em">Probá Pro gratis — sin tarjeta que se acuerde al toque</p>
+    <p style="margin:0 0 24px;font-size:15px;color:#8892B0;line-height:1.6">Si ya estás usando TubeScout seguido, Pro te saca el tope de 5 análisis/día. Activá los <strong style="color:#EDF0FF">3 días gratis</strong> y decidí después — $4.99/mes recién al terminar el trial, cancelás cuando quieras.</p>
+    <a href="${LS_CHECKOUT_MONTHLY}" style="display:block;text-align:center;background:#00C896;color:#080910;font-size:14px;font-weight:700;padding:12px 20px;border-radius:8px;text-decoration:none;margin-bottom:16px">Empezar trial gratis</a>
     <p style="margin:0;font-size:12px;color:#5A6380">★★★★★ 5.0 en Chrome Web Store</p>
   `);
 }
@@ -1000,7 +1000,7 @@ async function runNudgeJob() {
       WHERE is_pro = false AND nudge2_sent_at IS NULL AND created_at <= NOW() - INTERVAL '72 hours'
     `);
     for (const u of due2.rows) {
-      await sendNudgeEmail(u.email, { subject: 'Tu límite gratis se resetea todos los días — TubeScout', html: nudge2Html() });
+      await sendNudgeEmail(u.email, { subject: 'Probá TubeScout Pro gratis por 3 días', html: nudge2Html() });
       await db.query('UPDATE users SET nudge2_sent_at = NOW() WHERE id = $1', [u.id]);
     }
   } catch (err) {
