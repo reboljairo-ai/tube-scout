@@ -126,13 +126,20 @@ function togglePanel() {
 // Lets the side panel ask "what channel is this video on?" when it opens,
 // so it can auto-run the Channel Analyzer instead of waiting for manual input.
 function getChannelUrl() {
-  const link = document.querySelector('#channel-name a, ytd-channel-name a, #owner a, #upload-info a');
+  // Several fallbacks because YouTube has changed this markup more than
+  // once — none of these are guaranteed to exist on any given layout.
+  const link = document.querySelector(
+    '#channel-name a, ytd-channel-name a, #owner a, #upload-info a, ' +
+    'ytd-video-owner-renderer a, #text-container.ytd-channel-name a'
+  );
   return link ? link.href : null;
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === 'getChannelInfo') {
-    sendResponse({ channelUrl: getChannelUrl() });
+    const channelUrl = getChannelUrl();
+    if (!channelUrl) console.log('[TubeScout] content script: no channel link found on this page');
+    sendResponse({ channelUrl });
   }
   return true;
 });

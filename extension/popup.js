@@ -880,10 +880,22 @@ document.addEventListener('click', async e => {
 async function tryAutoAnalyzeFromYouTube() {
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (!tab?.id || !/^https:\/\/www\.youtube\.com\/watch/.test(tab.url || '')) return;
+    if (!tab?.id || !/^https?:\/\/(www\.)?youtube\.com\/watch/.test(tab.url || '')) {
+      console.log('[TubeScout] auto-analyze skipped: active tab is not a youtube.com/watch page', tab?.url);
+      return;
+    }
 
-    const resp = await chrome.tabs.sendMessage(tab.id, { action: 'getChannelInfo' }).catch(() => null);
-    if (!resp?.channelUrl) return;
+    // sendMessage throws if no content script answers — most commonly because
+    // the tab was already open *before* the extension was (re)loaded. Chrome
+    // only injects content scripts into tabs opened/reloaded after that.
+    const resp = await chrome.tabs.sendMessage(tab.id, { action: 'getChannelInfo' }).catch(err => {
+      console.log('[TubeScout] auto-analyze: no response from content script — try reloading the YouTube tab.', err?.message);
+      return null;
+    });
+    if (!resp?.channelUrl) {
+      console.log('[TubeScout] auto-analyze: content script answered but found no channel link on this page.', resp);
+      return;
+    }
 
     document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.panel').forEach(el => el.classList.remove('active'));
@@ -891,8 +903,8 @@ async function tryAutoAnalyzeFromYouTube() {
     $('panel-channel').classList.add('active');
     $('channel-input').value = resp.channelUrl;
     analyzeChannel();
-  } catch {
-    // No content script on this tab (not a youtube.com/watch page) — stay on the default tab.
+  } catch (err) {
+    console.log('[TubeScout] auto-analyze error:', err?.message);
   }
 }
 
