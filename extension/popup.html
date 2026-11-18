@@ -8,10 +8,15 @@
       /* Blue-tinted dark scale instead of flat gray — the biggest single lever
          for a "premium SaaS" feel (Linear/Vercel/Raycast all do this) without
          touching layout. --accent kept in the same teal-green family so the
-         brand still reads as TubeScout, just a touch more saturated. */
+         brand still reads as TubeScout, just a touch more saturated.
+         --surface and --hover-border exist so the header/tabs bar and hover
+         states can differ from --card/--border per theme instead of being
+         hardcoded hex that only ever matched the dark palette. */
       --bg: #0B0D12;
-      --card: #151822;
-      --border: #242836;
+      --card: #1A1E2C;
+      --surface: var(--surface);
+      --border: #2E3346;
+      --hover-border: #3D4359;
       --accent: #10D9A3;
       --accent-hover: #0DBB8C;
       --red: #FF6B6B;
@@ -19,6 +24,22 @@
       --yellow: #FFB84D;
       --text: #F0F2F7;
       --muted: #8891A5;
+      --on-accent: #0B0D12;
+    }
+    :root[data-theme="light"] {
+      --bg: #F6F7FA;
+      --card: #FFFFFF;
+      --surface: #FFFFFF;
+      --border: #E1E4EA;
+      --hover-border: #C7CBD6;
+      --accent: #0A9A77;
+      --accent-hover: #078462;
+      --red: #D8373A;
+      --green: #0A9A77;
+      --yellow: #B97A12;
+      --text: #15181F;
+      --muted: #6B7180;
+      --on-accent: #FFFFFF;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -37,7 +58,7 @@
 
     /* Header */
     .header {
-      background: #0E1118;
+      background: var(--surface);
       padding: 12px 16px;
       display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid var(--border);
@@ -48,7 +69,7 @@
       background: var(--accent); display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
-    .logo-mark svg { width: 16px; height: 16px; stroke: #111; fill: none; stroke-width: 2.5; }
+    .logo-mark svg { width: 16px; height: 16px; stroke: var(--on-accent); fill: none; stroke-width: 2.5; }
     .logo-text { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
     .logo-sub { font-size: 10px; color: var(--muted); margin-top: 1px; }
     .plan-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 4px; letter-spacing: 0.04em; text-transform: uppercase; }
@@ -56,7 +77,7 @@
     .badge-pro { background: rgba(0,200,150,0.12); color: var(--accent); border: 1px solid rgba(0,200,150,0.3); box-shadow: 0 0 8px rgba(0,200,150,0.15); }
 
     /* Tabs */
-    .tabs { display: flex; background: #0E1118; border-bottom: 1px solid var(--border); }
+    .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
     .tab {
       flex: 1; padding: 9px 4px; text-align: center; cursor: pointer;
       font-size: 10px; font-weight: 600; color: var(--muted); border: none; background: none;
@@ -65,7 +86,7 @@
     }
     .tab svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
-    .tab:hover:not(.active) { color: var(--text); }
+    .tab:hover:not(.active) { color: var(--accent); }
 
     /* Panels */
     .panels { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
@@ -87,7 +108,7 @@
     .search-input::placeholder { color: var(--muted); }
     .btn-search {
       padding: 9px 16px; background: var(--accent);
-      border: none; border-radius: 6px; color: #111;
+      border: none; border-radius: 6px; color: var(--on-accent);
       font-size: 12px; font-weight: 700; cursor: pointer;
       transition: background 0.15s; white-space: nowrap;
     }
@@ -174,7 +195,7 @@
       border-radius: 6px; padding: 10px 12px; margin-bottom: 5px;
       display: flex; gap: 10px; align-items: center;
     }
-    .video-item:hover { border-color: #363B4D; }
+    .video-item:hover { border-color: var(--hover-border); }
     .video-rank { font-size: 11px; font-weight: 700; color: var(--muted); min-width: 18px; padding-top: 2px; }
     .video-info { flex: 1; min-width: 0; }
     .video-title {
@@ -268,7 +289,7 @@
       font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
       margin-bottom: 8px;
     }
-    .btn-primary { background: var(--accent); color: #111; }
+    .btn-primary { background: var(--accent); color: var(--on-accent); }
     .btn-primary:hover { background: var(--accent-hover); }
     .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
     .btn-outline:hover { background: rgba(0,200,150,0.08); }
@@ -297,7 +318,7 @@
     .lock-banner p { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
     .lock-banner strong { color: var(--accent); }
     .btn-lock-upgrade {
-      background: var(--accent); color: #111; border: none;
+      background: var(--accent); color: var(--on-accent); border: none;
       padding: 7px 16px; border-radius: 5px; font-size: 11px;
       font-weight: 700; cursor: pointer;
     }
@@ -309,7 +330,7 @@
       z-index: 200; padding: 20px;
     }
     .email-modal {
-      background: #10131B; border: 1px solid var(--border);
+      background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 24px; width: 100%; text-align: center;
     }
     .modal-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
@@ -323,7 +344,7 @@
     .modal-input:focus { border-color: var(--accent); }
     .modal-input::placeholder { color: var(--muted); }
     .btn-modal-primary {
-      width: 100%; padding: 10px; background: var(--accent); color: #111;
+      width: 100%; padding: 10px; background: var(--accent); color: var(--on-accent);
       border: none; border-radius: 6px; font-size: 13px; font-weight: 700;
       cursor: pointer; margin-bottom: 8px;
     }
@@ -374,7 +395,7 @@
       display: flex; gap: 10px; align-items: center;
       transition: border-color 0.15s;
     }
-    .title-item:hover { border-color: #363B4D; }
+    .title-item:hover { border-color: var(--hover-border); }
     .title-text { flex: 1; font-size: 12px; color: var(--text); line-height: 1.5; }
     .copy-btn {
       background: none; border: 1px solid var(--border); color: var(--muted);
@@ -434,7 +455,7 @@
     /* Footer */
     .footer {
       padding: 8px 16px; border-top: 1px solid var(--border);
-      display: flex; justify-content: space-between; background: #0E1118;
+      display: flex; justify-content: space-between; background: var(--surface);
     }
     .footer a { font-size: 10px; color: var(--muted); text-decoration: none; }
     .footer a:hover { color: var(--accent); }
@@ -446,6 +467,14 @@
       cursor: pointer; letter-spacing: 0.05em; transition: all 0.15s;
     }
     .lang-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Theme toggle — same treatment as lang-toggle, just an icon instead of text */
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 4px; padding: 3px 7px; font-size: 11px;
+      cursor: pointer; transition: all 0.15s; line-height: 1;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
   </style>
 </head>
 <body>
@@ -460,6 +489,7 @@
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
+      <button class="theme-toggle" id="theme-toggle" title="Cambiar tema">🌙</button>
       <button class="lang-toggle" id="lang-toggle">EN</button>
       <span class="plan-badge badge-free" id="plan-badge">Free</span>
     </div>

@@ -27,6 +27,19 @@ $('lang-toggle')?.addEventListener('click', async () => {
   applyLang(newLang);
 });
 
+// ── Theme ─────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  const btn = $('theme-toggle');
+  if (btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+
+$('theme-toggle')?.addEventListener('click', async () => {
+  const newTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  await chrome.storage.local.set({ theme: newTheme });
+  applyTheme(newTheme);
+});
+
 // ── Tab switching ─────────────────────────────────────────
 let trendingLoaded = false;
 document.querySelectorAll('.tab').forEach(tab => {
@@ -48,9 +61,10 @@ let currentCategory = '0';
 
 // ── Init ──────────────────────────────────────────────────
 async function init() {
-  const { isPro, licenseKey, totalAnalysisCount, emailRegistered, lang } =
-    await chrome.storage.local.get(['isPro', 'licenseKey', 'totalAnalysisCount', 'emailRegistered', 'lang']);
+  const { isPro, licenseKey, totalAnalysisCount, emailRegistered, lang, theme } =
+    await chrome.storage.local.get(['isPro', 'licenseKey', 'totalAnalysisCount', 'emailRegistered', 'lang', 'theme']);
   applyLang(lang || 'en');
+  applyTheme(theme || 'dark');
   const total = totalAnalysisCount || 0;
   if (isPro && licenseKey) {
     showProState(licenseKey);
