@@ -317,6 +317,42 @@ async function analyzeNiche() {
   }
 }
 
+function incomeCardHTML(income, incomeLocked, extraHTML = '') {
+  if (income) return `
+    <div class="income-card">
+      <div class="income-row">
+        <div class="income-stat">
+          <span class="income-val">$${income.cpm} CPM</span>
+          <span class="income-label">${t('CPM estimado', 'Est. CPM')}</span>
+        </div>
+        <div class="income-stat">
+          <span class="income-val">$${fmtNum(income.min)}–$${fmtNum(income.max)}</span>
+          <span class="income-label">${t('Ingresos/mes est.', 'Est. monthly revenue')}</span>
+        </div>
+      </div>
+      ${extraHTML}
+    </div>`;
+  if (incomeLocked) return `
+    <div class="income-card income-card-locked" style="position:relative">
+      <div class="income-row" style="filter:blur(5px);user-select:none;pointer-events:none">
+        <div class="income-stat">
+          <span class="income-val">$18 CPM</span>
+          <span class="income-label">${t('CPM estimado', 'Est. CPM')}</span>
+        </div>
+        <div class="income-stat">
+          <span class="income-val">$412–$890</span>
+          <span class="income-label">${t('Ingresos/mes est.', 'Est. monthly revenue')}</span>
+        </div>
+      </div>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(10,10,10,0.35);border-radius:8px">
+        <span style="font-size:11px;color:#fff;font-weight:600">🔒 ${t('Ver CPM e ingresos reales', 'See real CPM & revenue')}</span>
+        <button class="btn-lock-upgrade js-upgrade" style="white-space:nowrap">${t('Ver Pro', 'View Pro')}</button>
+      </div>
+      ${extraHTML}
+    </div>`;
+  return extraHTML;
+}
+
 async function renderNicheResults(query, data) {
   const { videos, stats, score, income, incomeLocked, formatBreakdown } = data;
   const scoreClass = score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low';
@@ -341,37 +377,7 @@ async function renderNicheResults(query, data) {
         <div class="fmt-badge long">${formatBreakdown.long}%<span class="fmt-label">${t('Largo', 'Long')}</span></div>
       </div>` : '';
 
-  const incomeHTML = income ? `
-    <div class="income-card">
-      <div class="income-row">
-        <div class="income-stat">
-          <span class="income-val">$${income.cpm} CPM</span>
-          <span class="income-label">${t('CPM estimado', 'Est. CPM')}</span>
-        </div>
-        <div class="income-stat">
-          <span class="income-val">$${fmtNum(income.min)}–$${fmtNum(income.max)}</span>
-          <span class="income-label">${t('Ingresos/mes est.', 'Est. monthly revenue')}</span>
-        </div>
-      </div>
-      ${formatHTML}
-    </div>` : incomeLocked ? `
-    <div class="income-card income-card-locked" style="position:relative">
-      <div class="income-row" style="filter:blur(5px);user-select:none;pointer-events:none">
-        <div class="income-stat">
-          <span class="income-val">$18 CPM</span>
-          <span class="income-label">${t('CPM estimado', 'Est. CPM')}</span>
-        </div>
-        <div class="income-stat">
-          <span class="income-val">$412–$890</span>
-          <span class="income-label">${t('Ingresos/mes est.', 'Est. monthly revenue')}</span>
-        </div>
-      </div>
-      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(10,10,10,0.35);border-radius:8px">
-        <span style="font-size:11px;color:#fff;font-weight:600">🔒 ${t('Ver CPM e ingresos reales', 'See real CPM & revenue')}</span>
-        <button class="btn-lock-upgrade js-upgrade" style="white-space:nowrap">${t('Ver Pro', 'View Pro')}</button>
-      </div>
-      ${formatHTML}
-    </div>` : formatHTML;
+  const incomeHTML = incomeCardHTML(income, incomeLocked, formatHTML);
 
   const ringDeg = Math.round(score * 3.6);
   $('niche-results').innerHTML = `
@@ -514,7 +520,7 @@ async function analyzeChannel() {
 }
 
 function renderChannelResults(data) {
-  const { channel, topVideos, stats } = data;
+  const { channel, topVideos, stats, income, incomeLocked } = data;
   $('channel-results').innerHTML = `
     <div class="channel-header">
       <div class="channel-avatar">${channel.name[0].toUpperCase()}</div>
@@ -524,6 +530,7 @@ function renderChannelResults(data) {
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${fmtNum(channel.videoCount)} ${t('videos · Creado', 'videos · Created')} ${fmtDate(channel.publishedAt)}</div>
       </div>
     </div>
+    ${incomeCardHTML(income, incomeLocked)}
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-value">${fmtNum(stats.avgViews)}</div>

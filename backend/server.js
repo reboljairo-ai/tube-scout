@@ -235,7 +235,11 @@ async function saveHistory(userId, type, query, data) {
   ).catch(() => {});
 }
 
-function limitResults(data, isRegistered, type) {
+function limitResults(data, isRegistered, type, isPro = false) {
+  // Pro pays specifically for unlimited/unlocked results — never slice or
+  // lock anything for them, regardless of the registered-vs-anonymous split
+  // below (that split only decides what a non-paying user gets as a taste).
+  if (isPro) return { ...data, locked: false, lockedCount: 0 };
   if (!isRegistered) return { ...data, locked: false, lockedCount: 0 };
   const LIMIT = 5;
   switch (type) {
@@ -556,7 +560,7 @@ app.post('/api/analyze/niche', async (req, res) => {
     const cpm = estimateCPM(query);
     const income = isPro ? estimateIncome(avgViews, cpm) : null;
 
-    const limited = limitResults({ videos, stats: { avgViews, avgEngagement, avgSubs }, score, formatBreakdown, income, incomeLocked: !isPro }, isRegistered, 'niche');
+    const limited = limitResults({ videos, stats: { avgViews, avgEngagement, avgSubs }, score, formatBreakdown, income, incomeLocked: !isPro }, isRegistered, 'niche', isPro);
     if (userData) saveHistory(userData.user_id, 'niche', query, { score, income, stats: { avgViews, avgEngagement, avgSubs } });
     res.json({ data: limited });
   } catch (err) {
@@ -570,6 +574,7 @@ app.get('/api/trending', async (req, res) => {
     const { region = 'US', category = '0' } = req.query;
     const userData = await getRegisteredUser(req);
     const isRegistered = !!userData;
+    const isPro = !!userData?.is_pro;
     const catParam = category !== '0' ? `&videoCategoryId=${category}` : '';
 
     const data = await ytFetch(
@@ -580,7 +585,7 @@ app.get('/api/trending', async (req, res) => {
     const channelMap = await getChannelMap(channelIds);
 
     const videos = (data.items || []).map(v => mapVideo(v, channelMap));
-    const limited = limitResults({ videos }, isRegistered, 'trending');
+    const limited = limitResults({ videos }, isRegistered, 'trending', isPro);
     res.json({ data: limited });
   } catch (err) {
     ytErrorResponse(res, err, 'Error al cargar tendencias.');
@@ -595,6 +600,7 @@ app.post('/api/analyze/channel', async (req, res) => {
     const userData = await getRegisteredUser(req);
     if (userData && !await checkDailyLimit(userData, res)) return;
     const isRegistered = !!userData;
+    const isPro = !!userData?.is_pro;
 
     let channelId;
 
@@ -645,6 +651,14 @@ app.post('/api/analyze/channel', async (req, res) => {
     const weeksSince = Math.max(1, Math.floor((Date.now() - new Date(ch.snippet.publishedAt)) / 604800000));
     const uploadFreq = (videoCount / weeksSince).toFixed(1);
 
+    // Same Pro-only real-income-estimate pattern as /api/analyze/niche (see
+    // comment there re: Chrome Web Store review policy) — topic signal comes
+    // from the channel name + its own top video titles since there's no
+    // user-typed query here.
+    const cpmQuery = `${ch.snippet.title} ${topVideos.map(v => v.title).join(' ')}`;
+    const cpm = estimateCPM(cpmQuery);
+    const income = isPro ? estimateIncome(avgViews, cpm) : null;
+
     const channelResult = {
       channel: {
         id: channelId,
@@ -655,9 +669,11 @@ app.post('/api/analyze/channel', async (req, res) => {
         publishedAt: ch.snippet.publishedAt
       },
       topVideos,
-      stats: { avgViews, avgEngagement, uploadFreq }
+      stats: { avgViews, avgEngagement, uploadFreq },
+      income,
+      incomeLocked: !isPro
     };
-    const limited = limitResults(channelResult, isRegistered, 'channel');
+    const limited = limitResults(channelResult, isRegistered, 'channel', isPro);
     res.json({ data: limited });
   } catch (err) {
     ytErrorResponse(res, err, 'Error al analizar el canal.');
@@ -792,7 +808,7 @@ app.post('/api/keywords', async (req, res) => {
     keywordData.sort((a, b) => b.score - a.score);
     const userData2 = await getRegisteredUser(req);
     if (userData2 && !await checkDailyLimit(userData2, res)) return;
-    const limited2 = limitResults({ keywords: keywordData }, !!userData2, 'keywords');
+    const limited2 = limitResults({ keywords: keywordData }, !!userData2, 'keywords', !!userData2?.is_pro);
     res.json({ data: { ...limited2, parsedTopic: topic, lang, region } });
   } catch (err) {
     if (err.quotaExceeded) return ytErrorResponse(res, err, 'Error al buscar palabras clave.');
