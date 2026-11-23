@@ -182,19 +182,44 @@ async function getRegisteredUser(req) {
   const auth = req.headers.authorization?.replace('Bearer ', '');
   if (!auth) return null;
   const { rows } = await db.query(
-    'SELECT t.token, t.daily_count, t.last_reset, u.id as user_id, u.email, u.is_pro FROM auth_tokens t JOIN users u ON t.user_id = u.id WHERE t.token = $1',
+    'SELECT t.token, t.daily_count, t.last_reset, u.id as user_id, u.email, u.is_pro, u.created_at FROM auth_tokens t JOIN users u ON t.user_id = u.id WHERE t.token = $1',
     [auth]
   );
   return rows[0] || null;
 }
 
+// Free-tier daily limit decays over an 8-day cycle counted from the account's
+// original signup date (applies to already-registered accounts too, not just
+// new signups): day 1 = 5, day 2 = 3, day 3 = 1, days 4-8 = 0, then day 9
+// restarts the cycle at 5. Using UTC day boundaries keeps this consistent
+// with last_reset's toDateString() comparison below (both server-local,
+// which is UTC on Railway).
+const FREE_CYCLE = [5, 3, 1, 0, 0, 0, 0, 0];
+function dailyLimitFor(userData) {
+  if (userData.is_pro) return 999;
+  const signup = new Date(userData.created_at);
+  const signupDayUTC = Date.UTC(signup.getUTCFullYear(), signup.getUTCMonth(), signup.getUTCDate());
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const daysSinceSignup = Math.round((todayUTC - signupDayUTC) / 86400000);
+  const idx = ((daysSinceSignup % FREE_CYCLE.length) + FREE_CYCLE.length) % FREE_CYCLE.length;
+  return FREE_CYCLE[idx];
+}
+
 async function checkDailyLimit(userData, res) {
+  const limit = dailyLimitFor(userData);
   const today = new Date().toDateString();
   if (userData.last_reset !== today) {
+    // New day: still enforce today's limit before resetting the counter —
+    // a cycle day with limit 0 must block the very first request too,
+    // not just the ones after some count has already accumulated.
+    if (limit <= 0) {
+      res.status(429).json({ error: 'Límite diario alcanzado. Actualiza a Pro para análisis ilimitados.' });
+      return false;
+    }
     await db.query('UPDATE auth_tokens SET daily_count = 1, last_reset = $1 WHERE token = $2', [today, userData.token]);
     return true;
   }
-  const limit = userData.is_pro ? 999 : 5;
   if (userData.daily_count >= limit) {
     res.status(429).json({ error: 'Límite diario alcanzado. Actualiza a Pro para análisis ilimitados.' });
     return false;
@@ -826,7 +851,7 @@ app.get('/api/user/stats', async (req, res) => {
       isPro: userData.is_pro,
       todayCount,
       totalSearches: parseInt(totalRows[0].total),
-      dailyLimit: userData.is_pro ? 'Ilimitado' : 5
+      dailyLimit: userData.is_pro ? 'Ilimitado' : dailyLimitFor(userData)
     });
   } catch (err) {
     res.status(500).json({ error: 'Error al obtener estadísticas' });

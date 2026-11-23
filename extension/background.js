@@ -49,6 +49,7 @@ async function handleMessage(msg) {
     case 'analyzeChannel':  return analyzeChannel(msg.input);
     case 'activateLicense': return activateLicense(msg.licenseKey);
     case 'registerEmail':   return registerEmail(msg.email);
+    case 'getUserStats':    return getUserStats();
     default: return { error: 'Unknown action' };
   }
 }
@@ -76,6 +77,14 @@ async function analyzeNiche(query) {
 
 async function getTrending(region = 'US', category = '0') {
   return apiFetch(`/api/trending?region=${region}&category=${category}`);
+}
+
+async function getUserStats() {
+  try {
+    return await apiFetch('/api/user/stats');
+  } catch (err) {
+    return { error: err.message };
+  }
 }
 
 async function analyzeChannel(input) {

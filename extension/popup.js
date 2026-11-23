@@ -77,22 +77,38 @@ async function init() {
   renderFavorites();
 }
 
+function renderUsage(used, limit) {
+  $('usage-text').textContent = t(
+    `${Math.min(used, limit)} de ${limit} análisis usados`,
+    `${Math.min(used, limit)} of ${limit} analyses used`
+  );
+  $('usage-bar').style.width = `${limit > 0 ? Math.min(100, (used / limit) * 100) : 100}%`;
+  $('usage-bar').style.background = used >= limit ? '#FF5555' : 'var(--accent)';
+}
+
 function showFreeState(total, emailRegistered) {
-  const limit = emailRegistered ? LIMIT_EMAIL : LIMIT_ANON;
   $('plan-badge').textContent = 'Free';
   $('plan-badge').className = 'plan-badge badge-free';
   $('plan-badge2').textContent = 'Free';
   $('plan-badge2').className = 'plan-badge badge-free';
   $('plan-name').textContent = 'Free';
-  $('usage-text').textContent = t(
-    `${Math.min(total, limit)} de ${limit} análisis usados`,
-    `${Math.min(total, limit)} of ${limit} analyses used`
-  );
-  $('usage-bar').style.width = `${Math.min(100, (total / limit) * 100)}%`;
-  $('usage-bar').style.background = total >= limit ? '#FF5555' : 'var(--accent)';
+  // Best-effort local guess first (instant render); registered users' real
+  // limit now varies day to day (declining cycle), so refresh from the
+  // server right after — it's the only source of truth for today's cap.
+  renderUsage(Math.min(total, LIMIT_EMAIL), LIMIT_EMAIL);
   $('license-section').style.display = 'block';
   $('pro-active').style.display = 'none';
   $('upgrade-section').style.display = 'block';
+
+  if (emailRegistered) {
+    chrome.runtime.sendMessage({ action: 'getUserStats' }).then(stats => {
+      if (stats && !stats.error && typeof stats.dailyLimit === 'number') {
+        renderUsage(stats.todayCount, stats.dailyLimit);
+      }
+    }).catch(() => {});
+  } else {
+    renderUsage(Math.min(total, LIMIT_ANON), LIMIT_ANON);
+  }
 }
 
 function showProState(key) {
@@ -739,15 +755,20 @@ async function limitHTML() {
     return `
       <div class="empty-state">
         <p>${t('Llegaste al límite de análisis gratuitos.', 'You reached the free analysis limit.')}</p>
-        <button onclick="window.openModal()" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('📧 Registrate gratis → 5 análisis/día', '📧 Register free → 5 analyses/day')}</button>
+        <button onclick="window.openModal()" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('📧 Registrate gratis → hasta 5 análisis/día', '📧 Register free → up to 5 analyses/day')}</button>
         <p style="font-size:10px;color:var(--muted);margin-top:4px">${t('o', 'or')} <span class="js-upgrade" style="cursor:pointer;color:var(--accent)">${t('actualiza a Pro para ilimitados', 'upgrade to Pro for unlimited')}</span></p>
       </div>`;
   }
   const { h, m } = timeUntilReset();
   const countdown = t(`${h}h ${m}min`, `${h}h ${m}min`);
+  let stats = null;
+  try { stats = await chrome.runtime.sendMessage({ action: 'getUserStats' }); } catch {}
+  const limitMsg = (stats && !stats.error && typeof stats.dailyLimit === 'number')
+    ? t(`Llegaste al límite diario de ${stats.dailyLimit} análisis.`, `You reached your daily limit of ${stats.dailyLimit} analyses.`)
+    : t('Llegaste al límite diario de análisis gratuitos.', 'You reached your daily free analysis limit.');
   return `
     <div class="empty-state">
-      <p>${t('Llegaste al límite diario de 5 análisis.', 'You reached your daily limit of 5 analyses.')}</p>
+      <p>${limitMsg}</p>
       <button class="js-upgrade" style="background:var(--accent);color:#0A0A0A;border:none;border-radius:6px;padding:9px 16px;font-size:12px;font-weight:600;cursor:pointer;margin:8px 0;display:block;width:100%">${t('🎁 Probá Pro gratis 3 días', '🎁 Try Pro free for 3 days')}</button>
       <p style="font-size:10px;color:var(--muted);margin-top:4px">${t(`Se resetea en ${countdown}.`, `Resets in ${countdown}.`)}</p>
       <p style="font-size:10px;color:var(--muted);margin-top:8px">★★★★★ ${t('5.0 en Chrome Web Store', '5.0 on Chrome Web Store')}</p>
